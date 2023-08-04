@@ -13,16 +13,24 @@ public class TelegramStatusService : ITelegramStatusService
 {
     private Client _telegramClient;
     private IConfig<MainConfig> _config;
+    private string _userAbout;
 
     public TelegramStatusService(IConfig<MainConfig> config)
     {
         this._config = config;
         this._telegramClient = new Client(TelegramConfig);
-        this._telegramClient.LoginUserIfNeeded().Wait();
+        this.Init().Wait();
     }
 
     public async Task ChangeUserBio(string bio)
         => await this._telegramClient.Account_UpdateProfile(about: bio);
+
+    private async Task Init()
+    {
+        await this._telegramClient.LoginUserIfNeeded();
+        this._userAbout = (await this._telegramClient.Users_GetFullUser(new InputUser(this._telegramClient.UserId,
+            this._telegramClient.User.access_hash))).full_user.about;
+    }
 
     private string? TelegramConfig(string what)
     {
