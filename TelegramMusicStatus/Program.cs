@@ -1,5 +1,4 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-using SpotifyAPI.Web.Auth;
 using TelegramMusicStatus.Config;
 using TelegramMusicStatus.Services;
 
@@ -19,7 +18,11 @@ internal class Program
             .AddSingleton<ITelegramStatusService, TelegramStatusService>()
             .AddSingleton<ISpotifyMusicService, SpotifyMusicService>()
             .BuildServiceProvider(true);
-        var spotify = serviceProvider.GetService<ISpotifyMusicService>();
+        var telegramService = serviceProvider.GetService<ITelegramStatusService>();
+        var spotifyService = serviceProvider.GetService<ISpotifyMusicService>();
+
+        var status = await spotifyService.GetCurrentlyPlayingStatus();
+        if (status.IsPlaying) telegramService.ChangeUserBio(status.bio);
         await Task.Delay(-1);
     }
 }

@@ -2,9 +2,12 @@
 
 public record MainConfig(
     Telegram TelegramAccount,
-    Spotify SpotifyApp
+    Spotify SpotifyAccount,
+    SpotifyApp SpotifyApp
 );
 
 public record Telegram(string ApiId, string ApiHash, string PhoneNumber, string MFAPassword);
 
-public record Spotify(string ClientId, string ClientSecret);
+public record Spotify(string BearerToken);
+
+public record SpotifyApp(string ClientId, string ClientSecret);
