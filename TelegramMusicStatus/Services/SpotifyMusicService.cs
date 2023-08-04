@@ -7,7 +7,7 @@ namespace TelegramMusicStatus.Services;
 
 public interface ISpotifyMusicService
 {
-    Task<string> GetCurrentlyPlayingStatus();
+    Task<(bool IsPlaying, string bio)> GetCurrentlyPlayingStatus();
 }
 
 public class SpotifyMusicService : ISpotifyMusicService
@@ -28,16 +28,18 @@ public class SpotifyMusicService : ISpotifyMusicService
         Init().Wait();
     }
 
-    public async Task<string> GetCurrentlyPlayingStatus()
+    public async Task<(bool IsPlaying, string bio)> GetCurrentlyPlayingStatus()
     {
         var request = new PlayerCurrentlyPlayingRequest();
-        var track = await _spotifyClient.Player.GetCurrentlyPlaying(request);
-        return track.Item switch
+        var currentlyPlaying = await _spotifyClient.Player.GetCurrentlyPlaying(request);
+        var bio = currentlyPlaying.Item switch
         {
-            FullTrack fullTrack => $"{fullTrack.Name} - {string.Join(", ",fullTrack.Artists.Select(a => a.Name))}",
-            FullEpisode fullEpisode => $"{fullEpisode.Name}",
+            FullTrack fullTrack => $"{fullTrack.Name} - {string.Join(", ", fullTrack.Artists.Select(a => a.Name))}",
+            FullEpisode fullEpisode => $"{fullEpisode.Name} - {fullEpisode.Show.Name}",
             _ => string.Empty
         };
+        
+        return (currentlyPlaying.IsPlaying, bio);
     }
 
     public async Task Init()
@@ -70,7 +72,7 @@ public class SpotifyMusicService : ISpotifyMusicService
 
         this._spotifyClient = new SpotifyClient(tokenResponse.AccessToken);
         var status = await GetCurrentlyPlayingStatus();
-        await this._telegramStatusService.ChangeUserBio(status);
+        await this._telegramStatusService.ChangeUserBio(status.bio);
     }
 
     private async Task OnErrorReceived(object sender, string error, string? state)
