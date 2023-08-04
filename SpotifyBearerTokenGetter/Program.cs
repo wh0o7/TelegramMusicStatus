@@ -61,6 +61,8 @@ internal class Program
             )
         );
         Console.WriteLine($"Success! Your Bearer token is: {tokenResponse.AccessToken}");
+        Console.Read();
+        Environment.Exit(0);
     }
 
     private static async Task OnErrorReceived(object sender, string error, string? state)

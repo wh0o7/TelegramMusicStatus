@@ -1,13 +1,19 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using TelegramMusicStatus.Config;
 using TelegramMusicStatus.Services;
+using System.Timers;
 
 namespace TelegramMusicStatus;
 
 internal class Program
 {
+    private static System.Timers.Timer _timer;
+    private static ITelegramStatusService? _telegramService;
+    private static ISpotifyMusicService? _spotifyService;
+
     private static void Main()
     {
+        Console.CancelKeyPress += Console_CancelKeyPress;
         Run().GetAwaiter().GetResult();
     }
 
@@ -18,12 +24,45 @@ internal class Program
             .AddSingleton<ITelegramStatusService, TelegramStatusService>()
             .AddSingleton<ISpotifyMusicService, SpotifyMusicService>()
             .BuildServiceProvider(true);
-        var telegramService = serviceProvider.GetService<ITelegramStatusService>();
-        var spotifyService = serviceProvider.GetService<ISpotifyMusicService>();
+        _telegramService = serviceProvider.GetService<ITelegramStatusService>();
+        _spotifyService = serviceProvider.GetService<ISpotifyMusicService>();
+        _timer = new System.Timers.Timer(30000);
+        _timer.Elapsed += TimerElapsed;
+        Task.Run(() => TimerElapsed(null, null)).Wait();
+        _timer.Start();
 
-        var status = await spotifyService.GetCurrentlyPlayingStatus();
-        Console.WriteLine($"Current state is {(status.IsPlaying ? "playing":"paused")}, now playing: {status.bio}");
-        if (status.IsPlaying) telegramService.ChangeUserBio(status.bio);
         await Task.Delay(-1);
+    }
+
+    private static async void TimerElapsed(object? sender, ElapsedEventArgs? e)
+    {
+        var status = await _spotifyService.GetCurrentlyPlayingStatus();
+        Console.WriteLine(
+            $"Current state is {(status.IsPlaying ? "playing" : "paused")}, now playing: {status.bio}");
+
+        if (!status.IsPlaying)
+        {
+            _timer.Stop();
+            Console.WriteLine("Music playback has paused. Do you want to continue? Y/N");
+            var answer = Console.ReadLine();
+            if (answer?.ToUpperInvariant() is "Y")
+            {
+                Console.WriteLine("The application continued to run.");
+                _timer.Start();
+            }
+            else Console_CancelKeyPress(null, null);
+        }
+        else
+        {
+            _telegramService.ChangeUserBio(status.bio);
+        }
+    }
+
+    private static async void Console_CancelKeyPress(object sender, ConsoleCancelEventArgs e)
+    {
+        Console.WriteLine("Closing the application gracefully...");
+        _timer.Stop();
+        await _telegramService.SetUserDefaultBio();
+        Environment.Exit(0);
     }
 }

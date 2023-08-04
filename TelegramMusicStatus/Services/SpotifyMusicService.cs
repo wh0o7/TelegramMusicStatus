@@ -13,13 +13,11 @@ public interface ISpotifyMusicService
 public class SpotifyMusicService : ISpotifyMusicService
 {
     private IConfig<MainConfig> _config;
-    private ITelegramStatusService _telegramStatusService;
     private SpotifyClient _spotifyClient;
 
-    public SpotifyMusicService(IConfig<MainConfig> config, ITelegramStatusService telegramStatusService)
+    public SpotifyMusicService(IConfig<MainConfig> config)
     {
         this._config = config;
-        this._telegramStatusService = telegramStatusService;
         this._spotifyClient = new SpotifyClient(this._config.Entries.SpotifyAccount.BearerToken);
     }
 

@@ -7,6 +7,7 @@ namespace TelegramMusicStatus.Services;
 public interface ITelegramStatusService
 {
     Task ChangeUserBio(string bio);
+    Task SetUserDefaultBio();
 }
 
 public class TelegramStatusService : ITelegramStatusService
@@ -14,6 +15,7 @@ public class TelegramStatusService : ITelegramStatusService
     private Client _telegramClient;
     private IConfig<MainConfig> _config;
     private string _userAbout;
+    private string _currentAbout;
 
     public TelegramStatusService(IConfig<MainConfig> config)
     {
@@ -23,7 +25,11 @@ public class TelegramStatusService : ITelegramStatusService
     }
 
     public async Task ChangeUserBio(string bio)
-        => await this._telegramClient.Account_UpdateProfile(about: bio);
+    {
+        if(bio == this._currentAbout) return;
+        await this._telegramClient.Account_UpdateProfile(about: bio);
+        this._currentAbout = bio;
+    }
 
     public async Task SetUserDefaultBio()
         => await this.ChangeUserBio(this._userAbout);
