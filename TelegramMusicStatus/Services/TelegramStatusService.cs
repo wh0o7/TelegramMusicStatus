@@ -25,6 +25,9 @@ public class TelegramStatusService : ITelegramStatusService
     public async Task ChangeUserBio(string bio)
         => await this._telegramClient.Account_UpdateProfile(about: bio);
 
+    public async Task SetUserDefaultBio()
+        => await this.ChangeUserBio(this._userAbout);
+
     private async Task Init()
     {
         await this._telegramClient.LoginUserIfNeeded();
