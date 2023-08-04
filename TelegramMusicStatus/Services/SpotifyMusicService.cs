@@ -34,7 +34,7 @@ public class SpotifyMusicService : ISpotifyMusicService
         var track = await _spotifyClient.Player.GetCurrentlyPlaying(request);
         return track.Item switch
         {
-            FullTrack fullTrack => $"{fullTrack.Name} - {fullTrack.Artists[0].Name}",
+            FullTrack fullTrack => $"{fullTrack.Name} - {string.Join(", ",fullTrack.Artists.Select(a => a.Name))}",
             FullEpisode fullEpisode => $"{fullEpisode.Name}",
             _ => string.Empty
         };
