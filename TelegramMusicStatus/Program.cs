@@ -22,6 +22,7 @@ internal class Program
         var spotifyService = serviceProvider.GetService<ISpotifyMusicService>();
 
         var status = await spotifyService.GetCurrentlyPlayingStatus();
+        Console.WriteLine($"Current state is {(status.IsPlaying ? "playing":"paused")}, now playing: {status.bio}");
         if (status.IsPlaying) telegramService.ChangeUserBio(status.bio);
         await Task.Delay(-1);
     }

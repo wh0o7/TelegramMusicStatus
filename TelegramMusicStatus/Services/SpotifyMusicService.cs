@@ -21,8 +21,6 @@ public class SpotifyMusicService : ISpotifyMusicService
         this._config = config;
         this._telegramStatusService = telegramStatusService;
         this._spotifyClient = new SpotifyClient(this._config.Entries.SpotifyAccount.BearerToken);
-        // var status = await GetCurrentlyPlayingStatus();
-        // await this._telegramStatusService.ChangeUserBio(status.bio);
     }
 
     public async Task<(bool IsPlaying, string bio)> GetCurrentlyPlayingStatus()
