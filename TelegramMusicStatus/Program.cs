@@ -54,7 +54,7 @@ internal class Program
         }
         else
         {
-            _telegramService.ChangeUserBio(status.bio);
+            _telegramService.ChangeUserBio(Utils.FormatTrackInfo(status.bio));
         }
     }
 
