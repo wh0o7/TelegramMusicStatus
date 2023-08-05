@@ -4,7 +4,7 @@ namespace SpotifyBearerTokenGetter.Config;
 
 public interface IConfig<out T>
 {
-    T Entries { get; }
+    T? Entries { get; }
 }
 
 public class Config<T> : IConfig<T>
@@ -12,7 +12,7 @@ public class Config<T> : IConfig<T>
     public static string FilePath { get; set; } = "./config.json";
 
     
-    private static T ReadConfig()
+    private static T? ReadConfig()
     {
         var file = new FileInfo(FilePath);
         if (!file.Exists)
@@ -21,13 +21,13 @@ public class Config<T> : IConfig<T>
 
         var fileData = File.ReadAllText(file.FullName);
         var data = JsonSerializer.Deserialize<T>(fileData);
-        if (data is null) throw new FileLoadException("Can't load " + typeof(T).Name + " config");
+        if (data is null) return default;
         return data;
     }
 
-    public T Entries { get; set; } = ReadConfig();
+    public T? Entries { get; set; } = ReadConfig();
     
-    public void SaveConfig(T data)
+    public static void SaveConfig(T data)
     {
         var jsonOptions = new JsonSerializerOptions
         {

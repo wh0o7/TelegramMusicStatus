@@ -1,4 +1,5 @@
-﻿using SpotifyAPI.Web;
+﻿using System.Net;
+using SpotifyAPI.Web;
 using SpotifyAPI.Web.Auth;
 using SpotifyBearerTokenGetter.Config;
 
@@ -15,23 +16,30 @@ internal class Program
 
     public static async Task Main()
     {
-        if (!File.Exists("./config.json"))
+        var path = string.Empty;
+        if (!File.Exists(Config<MainConfig>.FilePath)) //checking default path
         {
-            Console.WriteLine("Input Client Id of your Spotify app: ");
-            ClientId = Console.ReadLine();
-            Console.WriteLine("Input Client Secret of your Spotify app: ");
-            ClientSecret = Console.ReadLine();
+            Console.WriteLine(
+                "If you have config with ClientId and ClientSecret, write path to config. Or just write N: ");
+            path = Console.ReadLine();
+            if (path.ToUpperInvariant() is "N" || !File.Exists(path))
+            {
+                Console.WriteLine("Input Client Id of your Spotify app: ");
+                ClientId = Console.ReadLine();
+                Console.WriteLine("Input Client Secret of your Spotify app: ");
+                ClientSecret = Console.ReadLine();
+            }
+            else
+            {
+                Config<MainConfig>.FilePath = path;
+                await GetConfigData();
+            }
         }
         else
         {
-            _config = new Config<MainConfig>();
-            if (_config.Entries.SpotifyApp.ClientId is not null &&
-                _config.Entries.SpotifyApp.ClientSecret is not null)
-            {
-                ClientSecret = _config.Entries.SpotifyApp.ClientSecret;
-                ClientId = _config.Entries.SpotifyApp.ClientId;
-            }
+            await GetConfigData();
         }
+
 
         _port = 5543;
         _uri = new Uri($"http://localhost:{_port}/callback");
@@ -62,16 +70,16 @@ internal class Program
             )
         );
         Console.WriteLine($"Success! Your Bearer token is: {tokenResponse.AccessToken}");
-        var configService = new Config<MainConfig>();
-        var mainConfig = configService.Entries;
-        var updatedSpotify = mainConfig.SpotifyAccount with
-        {
-            BearerToken = tokenResponse.AccessToken, Response = tokenResponse
-        };
+        var configService = File.Exists(Config<MainConfig>.FilePath) ? new Config<MainConfig>() : null;
+        var mainConfig = configService is not null
+            ? configService.Entries
+            : new MainConfig(new SpotifyApp(ClientId, ClientSecret), null,
+                new Telegram(string.Empty, string.Empty, string.Empty, string.Empty));
+        var updatedSpotify = new Spotify(BearerToken: tokenResponse.AccessToken, Response: tokenResponse);
         var updatedMainConfig = mainConfig with { SpotifyAccount = updatedSpotify };
 
-        configService.SaveConfig(updatedMainConfig);
-
+        Config<MainConfig>.SaveConfig(updatedMainConfig);
+        Console.WriteLine("Config successfully saved.");
         Console.Read();
         Environment.Exit(0);
     }
@@ -80,5 +88,16 @@ internal class Program
     {
         Console.WriteLine($"Aborting authorization, error received: {error}");
         await _server.Stop();
+    }
+
+    private static async Task GetConfigData()
+    {
+        _config = new Config<MainConfig>();
+        if (_config.Entries.SpotifyApp.ClientId is not null &&
+            _config.Entries.SpotifyApp.ClientSecret is not null)
+        {
+            ClientSecret = _config.Entries.SpotifyApp.ClientSecret;
+            ClientId = _config.Entries.SpotifyApp.ClientId;
+        }
     }
 }
