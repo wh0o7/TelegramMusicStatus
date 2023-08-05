@@ -9,12 +9,15 @@ public interface IConfig<out T>
 
 public class Config<T> : IConfig<T>
 {
+    public static string FilePath { get; set; } = "./config.json";
+
+    
     private static T ReadConfig()
     {
-        var file = new FileInfo("./config.json");
+        var file = new FileInfo(FilePath);
         if (!file.Exists)
             throw new FileNotFoundException(
-                "Config file not found, please create config.json file in the root server directory!");
+                "Config file not found, please create config.json file in the root directory!");
 
         var fileData = File.ReadAllText(file.FullName);
         var data = JsonSerializer.Deserialize<T>(fileData);
@@ -22,5 +25,15 @@ public class Config<T> : IConfig<T>
         return data;
     }
 
-    public T Entries { get; } = ReadConfig();
+    public T Entries { get; set; } = ReadConfig();
+    
+    public void SaveConfig(T data)
+    {
+        var jsonOptions = new JsonSerializerOptions
+        {
+            WriteIndented = true 
+        };
+        var jsonData = JsonSerializer.Serialize(data, jsonOptions);
+        File.WriteAllText(FilePath, jsonData);
+    }
 }

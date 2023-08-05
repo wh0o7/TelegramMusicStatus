@@ -32,6 +32,7 @@ internal class Program
                 ClientId = _config.Entries.SpotifyApp.ClientId;
             }
         }
+
         _port = 5543;
         _uri = new Uri($"http://localhost:{_port}/callback");
         _server = new EmbedIOAuthServer(_uri, _port);
@@ -61,6 +62,16 @@ internal class Program
             )
         );
         Console.WriteLine($"Success! Your Bearer token is: {tokenResponse.AccessToken}");
+        var configService = new Config<MainConfig>();
+        var mainConfig = configService.Entries; // Get the existing config
+        var updatedSpotify = mainConfig.SpotifyAccount with
+        {
+            BearerToken = tokenResponse.AccessToken, Response = tokenResponse
+        };
+        var updatedMainConfig = mainConfig with { SpotifyAccount = updatedSpotify };
+
+        configService.SaveConfig(updatedMainConfig);
+
         Console.Read();
         Environment.Exit(0);
     }
