@@ -18,7 +18,19 @@ public class SpotifyMusicService : ISpotifyMusicService
     public SpotifyMusicService(IConfig<MainConfig> config)
     {
         this._config = config;
-        this._spotifyClient = new SpotifyClient(this._config.Entries.SpotifyAccount.BearerToken);
+        if (this._config.Entries.SpotifyAccount.Response is not null)
+        {
+            var spotifyClientConfig = SpotifyClientConfig
+                .CreateDefault()
+                .WithAuthenticator(new AuthorizationCodeAuthenticator(this._config.Entries.SpotifyApp.ClientId,
+                    this._config.Entries.SpotifyApp.ClientSecret, this._config.Entries.SpotifyAccount.Response));
+
+            this._spotifyClient = new SpotifyClient(spotifyClientConfig);
+        }
+        else
+        {
+            this._spotifyClient = new SpotifyClient(this._config.Entries.SpotifyAccount.BearerToken);
+        }
     }
 
     public async Task<(bool IsPlaying, string bio)> GetCurrentlyPlayingStatus()

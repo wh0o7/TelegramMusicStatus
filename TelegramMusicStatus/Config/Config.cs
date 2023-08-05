@@ -14,7 +14,7 @@ public class Config<T> : IConfig<T>
         var file = new FileInfo("./config.json");
         if (!file.Exists)
             throw new FileNotFoundException(
-                "Config file not found, please create config.json file in the root server directory!");
+                "Config file not found, please create config.json file in the root directory!");
 
         var fileData = File.ReadAllText(file.FullName);
         var data = JsonSerializer.Deserialize<T>(fileData);

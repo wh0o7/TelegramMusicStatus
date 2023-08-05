@@ -63,7 +63,7 @@ internal class Program
         );
         Console.WriteLine($"Success! Your Bearer token is: {tokenResponse.AccessToken}");
         var configService = new Config<MainConfig>();
-        var mainConfig = configService.Entries; // Get the existing config
+        var mainConfig = configService.Entries;
         var updatedSpotify = mainConfig.SpotifyAccount with
         {
             BearerToken = tokenResponse.AccessToken, Response = tokenResponse
