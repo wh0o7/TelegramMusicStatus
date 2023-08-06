@@ -73,8 +73,7 @@ internal class Program
         var configService = File.Exists(Config<MainConfig>.FilePath) ? new Config<MainConfig>() : null;
         var mainConfig = configService is not null
             ? configService.Entries
-            : new MainConfig(new SpotifyApp(ClientId, ClientSecret), null,
-                new Telegram(string.Empty, string.Empty, string.Empty, string.Empty));
+            : new MainConfig(new SpotifyApp(ClientId, ClientSecret), null, null, null);
         var updatedSpotify = new Spotify(BearerToken: tokenResponse.AccessToken, Response: tokenResponse);
         var updatedMainConfig = mainConfig with { SpotifyAccount = updatedSpotify };
 
