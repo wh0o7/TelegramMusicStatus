@@ -7,7 +7,7 @@ namespace TelegramMusicStatus.Services;
 
 public interface ISpotifyMusicService
 {
-    Task<(bool IsPlaying, string bio)> GetCurrentlyPlayingStatus();
+    Task<(bool IsPlaying, string? Bio)> GetCurrentlyPlayingStatus();
 }
 
 public class SpotifyMusicService : ISpotifyMusicService
@@ -31,12 +31,20 @@ public class SpotifyMusicService : ISpotifyMusicService
         {
             this._spotifyClient = new SpotifyClient(this._config.Entries.SpotifyAccount.BearerToken);
         }
+
+        Task.Run(async () =>
+        {
+            if (await this._spotifyClient.Player.GetCurrentlyPlaying(
+                    new PlayerCurrentlyPlayingRequest()) is null)
+                throw new APIException("Your spotify has no currently playing songs. Turn on music and restart app.");
+        });
     }
 
-    public async Task<(bool IsPlaying, string bio)> GetCurrentlyPlayingStatus()
+    public async Task<(bool IsPlaying, string? Bio)> GetCurrentlyPlayingStatus()
     {
         var request = new PlayerCurrentlyPlayingRequest();
-        var currentlyPlaying = await _spotifyClient.Player.GetCurrentlyPlaying(request);
+        var currentlyPlaying = await this._spotifyClient.Player.GetCurrentlyPlaying(request);
+        if (currentlyPlaying is null) return (false, null);
         var bio = currentlyPlaying.Item switch
         {
             FullTrack fullTrack => $"{fullTrack.Name} - {string.Join(", ", fullTrack.Artists.Select(a => a.Name))}",

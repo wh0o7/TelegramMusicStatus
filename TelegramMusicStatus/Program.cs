@@ -38,7 +38,7 @@ internal class Program
     {
         var status = await _spotifyService.GetCurrentlyPlayingStatus();
         Console.WriteLine(
-            $"Current state is {(status.IsPlaying ? "playing" : "paused")}, now playing: {status.bio}");
+            $"Current state is {(status.IsPlaying ? "playing" : "paused")}, now playing: {status.Bio}");
 
         if (!status.IsPlaying)
         {
@@ -54,7 +54,7 @@ internal class Program
         }
         else
         {
-            _telegramService.ChangeUserBio(Utils.FormatTrackInfo(status.bio));
+            _telegramService.ChangeUserBio(Utils.FormatTrackInfo(status.Bio));
         }
     }
 
