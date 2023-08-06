@@ -15,4 +15,4 @@ public record Spotify(string BearerToken, AuthorizationCodeTokenResponse? Respon
 
 public record SpotifyApp(string ClientId, string ClientSecret);
 
-public record Settings(bool IsDeployed, bool IsDefaultBioOnPause, int Interval);
+public record Settings(bool IsDeployed, bool IsDefaultBioOnPause,int Interval);

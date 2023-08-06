@@ -8,6 +8,7 @@ namespace TelegramMusicStatus;
 internal class Program
 {
     private static System.Timers.Timer _timer;
+    private static Config<MainConfig> _config;
     private static ITelegramStatusService? _telegramService;
     private static ISpotifyMusicService? _spotifyService;
 
@@ -24,9 +25,12 @@ internal class Program
             .AddSingleton<ITelegramStatusService, TelegramStatusService>()
             .AddSingleton<ISpotifyMusicService, SpotifyMusicService>()
             .BuildServiceProvider(true);
+        _config = new Config<MainConfig>();
         _telegramService = serviceProvider.GetService<ITelegramStatusService>();
         _spotifyService = serviceProvider.GetService<ISpotifyMusicService>();
-        _timer = new System.Timers.Timer(30000);
+        _timer = new System.Timers.Timer(_config.Entries.Settings?.Interval is >= 10 and <= 300
+            ? _config.Entries.Settings.Interval * 1000
+            : 30000);
         _timer.Elapsed += TimerElapsed;
         Task.Run(() => TimerElapsed(null, null)).Wait();
         _timer.Start();
@@ -40,7 +44,8 @@ internal class Program
         Console.WriteLine(
             $"Current state is {(status.IsPlaying ? "playing" : "paused")}, now playing: {status.Bio}");
 
-        if (!status.IsPlaying)
+        
+        if (!status.IsPlaying && (_config.Entries.Settings is null || !_config.Entries.Settings.IsDeployed))
         {
             _timer.Stop();
             Console.WriteLine("Music playback has paused. Do you want to continue? Y/N");
@@ -52,10 +57,12 @@ internal class Program
             }
             else Console_CancelKeyPress(null, null);
         }
-        else
+        else if(status.IsPlaying)
         {
-            _telegramService.ChangeUserBio(Utils.FormatTrackInfo(status.Bio));
+            await _telegramService.ChangeUserBio(Utils.FormatTrackInfo(status.Bio));
         }
+
+        if (!status.IsPlaying && _config.Entries.Settings is { IsDefaultBioOnPause: true }) await _telegramService.SetUserDefaultBio();
     }
 
     private static async void Console_CancelKeyPress(object sender, ConsoleCancelEventArgs e)

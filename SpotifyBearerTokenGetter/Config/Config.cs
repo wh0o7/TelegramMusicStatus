@@ -10,8 +10,7 @@ public interface IConfig<out T>
 public class Config<T> : IConfig<T>
 {
     public static string FilePath { get; set; } = "./config.json";
-
-
+    
     private static T? ReadConfig()
     {
         var file = new FileInfo(FilePath);
