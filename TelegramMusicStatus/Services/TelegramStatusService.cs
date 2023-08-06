@@ -26,7 +26,7 @@ public class TelegramStatusService : ITelegramStatusService
 
     public async Task ChangeUserBio(string bio)
     {
-        if(bio == this._currentAbout) return;
+        if (bio == this._currentAbout) return;
         await this._telegramClient.Account_UpdateProfile(about: bio);
         this._currentAbout = bio;
     }
@@ -51,7 +51,14 @@ public class TelegramStatusService : ITelegramStatusService
             case "verification_code":
                 Console.Write("Code: ");
                 return Console.ReadLine();
-            case "password": return _config.Entries.TelegramAccount.MFAPassword;
+            case "password":
+                if (_config.Entries.TelegramAccount.MFAPassword is null)
+                {
+                    Console.Write("Cloud password(2FA): ");
+                    return Console.ReadLine();
+                }
+
+                return _config.Entries.TelegramAccount.MFAPassword;
             default: return null;
         }
     }
