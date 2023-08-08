@@ -40,6 +40,12 @@ internal class Program
 
     private static async void TimerElapsed(object? sender, ElapsedEventArgs? e)
     {
+        await SpotifyTask();
+    }
+
+    private static async Task SpotifyTask()
+    {
+        
         var status = await _spotifyService.GetCurrentlyPlayingStatus();
         if (status.Bio is null)
         {
