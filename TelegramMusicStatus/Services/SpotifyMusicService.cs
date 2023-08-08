@@ -31,19 +31,21 @@ public class SpotifyMusicService : ISpotifyMusicService
         {
             this._spotifyClient = new SpotifyClient(this._config.Entries.SpotifyAccount.BearerToken);
         }
-
-        Task.Run(async () =>
-        {
-            if (await this._spotifyClient.Player.GetCurrentlyPlaying(
-                    new PlayerCurrentlyPlayingRequest()) is null)
-                throw new APIException("Your spotify has no currently playing songs. Turn on music and restart app.");
-        });
     }
 
     public async Task<(bool IsPlaying, string? Bio)> GetCurrentlyPlayingStatus()
     {
         var request = new PlayerCurrentlyPlayingRequest();
-        var currentlyPlaying = await this._spotifyClient.Player.GetCurrentlyPlaying(request);
+        CurrentlyPlaying? currentlyPlaying;
+        try
+        {
+            currentlyPlaying = await this._spotifyClient.Player.GetCurrentlyPlaying(request);
+        }
+        catch
+        {
+            currentlyPlaying = null;
+        }
+
         if (currentlyPlaying is null) return (false, null);
         var bio = currentlyPlaying.Item switch
         {

@@ -41,10 +41,16 @@ internal class Program
     private static async void TimerElapsed(object? sender, ElapsedEventArgs? e)
     {
         var status = await _spotifyService.GetCurrentlyPlayingStatus();
+        if (status.Bio is null)
+        {
+            Console.WriteLine("Spotify web player paused.");
+            return;
+        }
+
         Console.WriteLine(
             $"Current state is {(status.IsPlaying ? "playing" : "paused")}, now playing: {status.Bio}");
 
-        
+
         if (!status.IsPlaying && (_config.Entries.Settings is null || !_config.Entries.Settings.IsDeployed))
         {
             _timer.Stop();
@@ -57,12 +63,13 @@ internal class Program
             }
             else Console_CancelKeyPress(null, null);
         }
-        else if(status.IsPlaying)
+        else if (status.IsPlaying)
         {
             await _telegramService.ChangeUserBio(Utils.FormatTrackInfo(status.Bio));
         }
 
-        if (!status.IsPlaying && _config.Entries.Settings is { IsDefaultBioOnPause: true }) await _telegramService.SetUserDefaultBio();
+        if (!status.IsPlaying && _config.Entries.Settings is { IsDefaultBioOnPause: true })
+            await _telegramService.SetUserDefaultBio();
     }
 
     private static async void Console_CancelKeyPress(object sender, ConsoleCancelEventArgs e)
