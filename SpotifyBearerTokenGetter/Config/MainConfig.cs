@@ -9,7 +9,9 @@ public record MainConfig(
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     Telegram TelegramAccount,
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    Settings Settings
+    Settings Settings,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    AIMPWebSocket AimpWebSocket
 );
 
 public record SpotifyApp(string ClientId, string ClientSecret);
@@ -19,3 +21,5 @@ public record Spotify(string BearerToken, AuthorizationCodeTokenResponse Respons
 public record Telegram(string ApiId, string ApiHash, string PhoneNumber, string MFAPassword);
 
 public record Settings(bool IsDeployed, bool IsDefaultBioOnPause, int Interval);
+
+public record AIMPWebSocket(string Ip, int Port);

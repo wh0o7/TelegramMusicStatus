@@ -1,13 +1,12 @@
 ﻿using SpotifyAPI.Web;
-using SpotifyAPI.Web.Auth;
-using Swan;
 using TelegramMusicStatus.Config;
+using TelegramMusicStatus.Models;
 
 namespace TelegramMusicStatus.Services;
 
-public interface ISpotifyMusicService
+public interface ISpotifyMusicService :IMusicService
 {
-    Task<(bool IsPlaying, string? Bio)> GetCurrentlyPlayingStatus();
+    new Task<(bool IsPlaying, string? Bio)> GetCurrentlyPlayingStatus();
 }
 
 public class SpotifyMusicService : ISpotifyMusicService
@@ -26,11 +25,14 @@ public class SpotifyMusicService : ISpotifyMusicService
                     this._config.Entries.SpotifyApp.ClientSecret, this._config.Entries.SpotifyAccount.Response));
 
             this._spotifyClient = new SpotifyClient(spotifyClientConfig);
+            
         }
         else
         {
             this._spotifyClient = new SpotifyClient(this._config.Entries.SpotifyAccount.BearerToken);
         }
+
+        Console.WriteLine("Spotify client started!");
     }
 
     public async Task<(bool IsPlaying, string? Bio)> GetCurrentlyPlayingStatus()

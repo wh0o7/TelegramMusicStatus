@@ -1,16 +1,18 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using System.Timers;
+using Microsoft.Extensions.DependencyInjection;
 using TelegramMusicStatus.Config;
 using TelegramMusicStatus.Services;
-using System.Timers;
+using Timer = System.Timers.Timer;
 
 namespace TelegramMusicStatus;
 
 internal class Program
 {
-    private static System.Timers.Timer _timer;
+    private static Timer _timer;
     private static Config<MainConfig> _config;
     private static ITelegramStatusService? _telegramService;
     private static ISpotifyMusicService? _spotifyService;
+    private static IAIMPMusicService? _aimpService;
 
     private static void Main()
     {
@@ -20,15 +22,20 @@ internal class Program
 
     private static async Task Run()
     {
-        var serviceProvider = new ServiceCollection()
-            .AddSingleton(typeof(IConfig<>), typeof(Config<>))
-            .AddSingleton<ITelegramStatusService, TelegramStatusService>()
-            .AddSingleton<ISpotifyMusicService, SpotifyMusicService>()
-            .BuildServiceProvider(true);
         _config = new Config<MainConfig>();
+        var serviceCollection = new ServiceCollection()
+            .AddSingleton(typeof(IConfig<>), typeof(Config<>))
+            .AddSingleton<ITelegramStatusService, TelegramStatusService>();
+        if (_config.Entries.SpotifyAccount is not null)
+            serviceCollection.AddSingleton<ISpotifyMusicService, SpotifyMusicService>();
+        if (_config.Entries.AimpWebSocket is not null)
+            serviceCollection.AddSingleton<IAIMPMusicService, AIMPMusicService>();
+        var serviceProvider = serviceCollection.BuildServiceProvider(true);
+
         _telegramService = serviceProvider.GetService<ITelegramStatusService>();
         _spotifyService = serviceProvider.GetService<ISpotifyMusicService>();
-        _timer = new System.Timers.Timer(_config.Entries.Settings?.Interval is >= 10 and <= 300
+        _aimpService = serviceProvider.GetService<IAIMPMusicService>();
+        _timer = new Timer(_config.Entries.Settings?.Interval is >= 10 and <= 300
             ? _config.Entries.Settings.Interval * 1000
             : 30000);
         _timer.Elapsed += TimerElapsed;
@@ -40,45 +47,88 @@ internal class Program
 
     private static async void TimerElapsed(object? sender, ElapsedEventArgs? e)
     {
-        await SpotifyTask();
+        if (_aimpService is not null && await AIMPTask()) return;
+        if (_spotifyService is not null && await SpotifyTask()) return;
+        if (_spotifyService is null && _aimpService is null)
+        {
+            Console.WriteLine(
+                "Both of services are disabled. Check your config.json for SpotifyAccount and/or AimpWebSocket");
+            Console_CancelKeyPress(null, null);
+        }
     }
 
-    private static async Task SpotifyTask()
+    private static async Task<bool> SpotifyTask()
     {
-        
         var status = await _spotifyService.GetCurrentlyPlayingStatus();
         if (status.Bio is null)
         {
             Console.WriteLine("Spotify web player paused.");
-            return;
+            return false;
         }
 
         Console.WriteLine(
-            $"Current state is {(status.IsPlaying ? "playing" : "paused")}, now playing: {status.Bio}");
+            $"(Spotify)   Current state is {(status.IsPlaying ? "playing" : "paused")}, now playing: {status.Bio}");
 
 
         if (!status.IsPlaying && (_config.Entries.Settings is null || !_config.Entries.Settings.IsDeployed))
         {
-            _timer.Stop();
-            Console.WriteLine("Music playback has paused. Do you want to continue? Y/N");
-            var answer = Console.ReadLine();
-            if (answer?.ToUpperInvariant() is "Y")
-            {
-                Console.WriteLine("The application continued to run.");
-                _timer.Start();
-            }
-            else Console_CancelKeyPress(null, null);
+            await PausePrompt();
         }
         else if (status.IsPlaying)
         {
             await _telegramService.ChangeUserBio(Utils.FormatTrackInfo(status.Bio));
+            return true;
         }
 
         if (!status.IsPlaying && _config.Entries.Settings is { IsDefaultBioOnPause: true })
             await _telegramService.SetUserDefaultBio();
+        return false;
     }
 
-    private static async void Console_CancelKeyPress(object sender, ConsoleCancelEventArgs e)
+    private static async Task<bool> AIMPTask()
+    {
+        var status = await _aimpService.GetCurrentlyPlayingStatus();
+        if (status.Bio is null)
+        {
+            Console.WriteLine("AIMP player paused.");
+            return false;
+        }
+
+        Console.WriteLine(
+            $"(AIMP)   Current state is {(status.IsPlaying ? "playing" : "paused")}, now playing: {status.Bio}");
+
+
+        if (!status.IsPlaying && (_config.Entries.Settings is null || !_config.Entries.Settings.IsDeployed))
+        {
+            await PausePrompt();
+        }
+        else if (status.IsPlaying)
+        {
+            await _telegramService.ChangeUserBio(Utils.FormatTrackInfo(status.Bio));
+            return true;
+        }
+
+        if (!status.IsPlaying && _config.Entries.Settings is { IsDefaultBioOnPause: true })
+            await _telegramService.SetUserDefaultBio();
+        return false;
+    }
+
+    private static Task PausePrompt()
+    {
+        _timer.Stop();
+        Console.WriteLine("Music playback has paused. Do you want to continue? Y/N");
+        var answer = Console.ReadLine();
+        if (answer?.ToUpperInvariant() is "Y")
+        {
+            Console.WriteLine("The application continued to run.");
+            _timer.Start();
+        }
+        else Console_CancelKeyPress(null, null);
+
+        return Task.CompletedTask;
+    }
+
+    private static async void Console_CancelKeyPress(object? sender, ConsoleCancelEventArgs? e)
     {
         Console.WriteLine("Closing the application gracefully...");
         _timer.Stop();
