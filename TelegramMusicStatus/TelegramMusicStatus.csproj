@@ -5,6 +5,9 @@
         <TargetFramework>net6.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
+        <LangVersion>latestmajor</LangVersion>
+        <AssemblyOriginatorKeyFile>Andrey Kosinets_0x13823130_public.asc</AssemblyOriginatorKeyFile>
+        <PublicSign>false</PublicSign>
     </PropertyGroup>
 
     <ItemGroup>

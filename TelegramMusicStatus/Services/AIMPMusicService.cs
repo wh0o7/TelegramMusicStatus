@@ -9,6 +9,7 @@ namespace TelegramMusicStatus.Services;
 public interface IAIMPMusicService : IMusicService
 {
     new Task<(bool IsPlaying, string? Bio)> GetCurrentlyPlayingStatus();
+    Task? Close();
 }
 
 public class AIMPMusicService : IAIMPMusicService
@@ -46,6 +47,13 @@ public class AIMPMusicService : IAIMPMusicService
 
         Console.WriteLine("WebSocket Server started.\nIP: " + _wssv.Address);
         Console.WriteLine("Port: " + _wssv.Port);
+        return Task.CompletedTask;
+    }
+
+    public Task Close()
+    {
+        _wssv.Stop();
+        Console.WriteLine("WebSocket Server stopped.");
         return Task.CompletedTask;
     }
 

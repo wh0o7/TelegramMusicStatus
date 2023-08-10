@@ -8,6 +8,7 @@ public interface ITelegramStatusService
 {
     Task ChangeUserBio(string bio);
     Task SetUserDefaultBio();
+    Task Close();
 }
 
 public class TelegramStatusService : ITelegramStatusService
@@ -62,5 +63,11 @@ public class TelegramStatusService : ITelegramStatusService
                 return _config.Entries.TelegramAccount.MFAPassword;
             default: return null;
         }
+    }
+
+    public Task Close()
+    {
+        this._telegramClient.Dispose();
+        return Task.CompletedTask;
     }
 }

@@ -4,7 +4,7 @@ using TelegramMusicStatus.Models;
 
 namespace TelegramMusicStatus.Services;
 
-public interface ISpotifyMusicService :IMusicService
+public interface ISpotifyMusicService : IMusicService
 {
     new Task<(bool IsPlaying, string? Bio)> GetCurrentlyPlayingStatus();
 }
@@ -25,7 +25,6 @@ public class SpotifyMusicService : ISpotifyMusicService
                     this._config.Entries.SpotifyApp.ClientSecret, this._config.Entries.SpotifyAccount.Response));
 
             this._spotifyClient = new SpotifyClient(spotifyClientConfig);
-            
         }
         else
         {

@@ -130,9 +130,11 @@ internal class Program
 
     private static async void Console_CancelKeyPress(object? sender, ConsoleCancelEventArgs? e)
     {
-        Console.WriteLine("Closing the application gracefully...");
         _timer.Stop();
         await _telegramService.SetUserDefaultBio();
+        Console.WriteLine("Closing the application gracefully...");
+        if (_aimpService is not null) await _aimpService.Close();
+        await _telegramService.Close();
         Environment.Exit(0);
     }
 }
