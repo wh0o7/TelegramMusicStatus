@@ -8,6 +8,7 @@
         <LangVersion>latestmajor</LangVersion>
         <AssemblyOriginatorKeyFile>Andrey Kosinets_0x13823130_public.asc</AssemblyOriginatorKeyFile>
         <PublicSign>false</PublicSign>
+        <ApplicationIcon>telegramstatusicon.ico</ApplicationIcon>
     </PropertyGroup>
 
     <ItemGroup>
