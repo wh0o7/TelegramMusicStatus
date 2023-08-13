@@ -6,10 +6,10 @@ using Timer = System.Timers.Timer;
 
 namespace TelegramMusicStatus;
 
-internal class Program
+internal static class Program
 {
-    private static Timer _timer;
-    private static Config<MainConfig> _config;
+    private static Timer? _timer;
+    private static Config<MainConfig>? _config;
     private static ITelegramStatusService? _telegramService;
     private static ISpotifyMusicService? _spotifyService;
     private static IAIMPMusicService? _aimpService;
@@ -35,7 +35,7 @@ internal class Program
         _telegramService = serviceProvider.GetService<ITelegramStatusService>();
         _spotifyService = serviceProvider.GetService<ISpotifyMusicService>();
         _aimpService = serviceProvider.GetService<IAIMPMusicService>();
-        _timer = new Timer(_config.Entries.Settings?.Interval is >= 10 and <= 300
+        _timer = new Timer(_config.Entries.Settings.Interval is >= 10 and <= 300
             ? _config.Entries.Settings.Interval * 1000
             : 30000);
         _timer.Elapsed += TimerElapsed;
@@ -56,7 +56,7 @@ internal class Program
             Console_CancelKeyPress(null, null);
         }
 
-        if (_config.Entries.Settings is null || !_config.Entries.Settings.IsDeployed)
+        if (_config?.Entries.Settings is null || !_config.Entries.Settings.IsDeployed)
         {
             await PausePrompt();
         }
@@ -64,7 +64,7 @@ internal class Program
 
     private static async Task<bool> SpotifyTask()
     {
-        var status = await _spotifyService.GetCurrentlyPlayingStatus();
+        var status = await _spotifyService!.GetCurrentlyPlayingStatus();
         if (status.Bio is null)
         {
             Console.WriteLine("Spotify web player paused.");
@@ -76,19 +76,19 @@ internal class Program
 
         if (status.IsPlaying)
         {
-            await _telegramService.ChangeUserBio(Utils.FormatTrackInfo(status.Bio));
+            await _telegramService?.ChangeUserBio(Utils.FormatTrackInfo(status.Bio))!;
             return true;
         }
 
-        if (!status.IsPlaying && _config.Entries.Settings is { IsDefaultBioOnPause: true })
-            await _telegramService.SetUserDefaultBio();
+        if (!status.IsPlaying && _config?.Entries.Settings is { IsDefaultBioOnPause: true })
+            await _telegramService?.SetUserDefaultBio()!;
 
         return false;
     }
 
     private static async Task<bool> AIMPTask()
     {
-        var status = await _aimpService.GetCurrentlyPlayingStatus();
+        var status = await _aimpService?.GetCurrentlyPlayingStatus()!;
         if (status.Bio is null)
         {
             Console.WriteLine("AIMP player paused.");
@@ -100,24 +100,24 @@ internal class Program
 
         if (status.IsPlaying)
         {
-            await _telegramService.ChangeUserBio(Utils.FormatTrackInfo(status.Bio));
+            await _telegramService?.ChangeUserBio(Utils.FormatTrackInfo(status.Bio))!;
             return true;
         }
 
-        if (!status.IsPlaying && _config.Entries.Settings is { IsDefaultBioOnPause: true })
-            await _telegramService.SetUserDefaultBio();
+        if (!status.IsPlaying && _config?.Entries.Settings is { IsDefaultBioOnPause: true })
+            await _telegramService?.SetUserDefaultBio()!;
         return false;
     }
 
     private static Task PausePrompt()
     {
-        _timer.Stop();
+        _timer?.Stop();
         Console.WriteLine("Music playback has paused. Do you want to continue? Y/N");
         var answer = Console.ReadLine();
         if (answer?.ToUpperInvariant() is "Y")
         {
             Console.WriteLine("The application continued to run.");
-            _timer.Start();
+            _timer?.Start();
         }
         else Console_CancelKeyPress(null, null);
 
@@ -126,10 +126,10 @@ internal class Program
 
     private static async void Console_CancelKeyPress(object? sender, ConsoleCancelEventArgs? e)
     {
-        _timer.Stop();
+        _timer?.Stop();
+        await _telegramService?.SetUserDefaultBio()!;
         Console.WriteLine("Closing the application gracefully...");
-        if (_aimpService is not null) await _aimpService.Close();
-        await _telegramService.SetUserDefaultBio();
+        if (_aimpService is not null) await _aimpService.Close()!;
         await _telegramService.Close();
         Environment.Exit(0);
     }
