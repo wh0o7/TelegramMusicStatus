@@ -29,10 +29,10 @@ jobs:
           zip -r ubuntu.22.04-x64.zip *
 
       - name: Build TokenGetter Windows
-        run: dotnet publish SpotifyBearerTokenGetter -c Release -r win-x64 -p:PublishSingleFile=true --output TelegramStatus/Publish/win-x64/Main
+        run: dotnet publish SpotifyBearerTokenGetter -c Release -r win-x64 -p:PublishSingleFile=true --output TelegramStatus/Publish/win-x64/Main --self-contained false
 
       - name: Build Telegram Music Status Windows
-        run: dotnet publish TelegramMusicStatus -c Release -r win-x64 -p:PublishSingleFile=true --output TelegramStatus/Publish/win-x64/Main/App
+        run: dotnet publish TelegramMusicStatus -c Release -r win-x64 -p:PublishSingleFile=true --output TelegramStatus/Publish/win-x64/Main/App --self-contained false 
 
       - name: Archive files windows
         run: |
