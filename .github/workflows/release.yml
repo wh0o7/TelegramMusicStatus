@@ -1,0 +1,86 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - v*
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Setup .NET Core SDK
+        uses: actions/setup-dotnet@v3.0.3
+        with:
+          dotnet-version: 6.0.20
+
+      - name: Build TokenGetter Ubuntu
+        run: dotnet publish SpotifyBearerTokenGetter -c Release -r ubuntu.22.04-x64 -p:PublishSingleFile=true --self-contained true --output TelegramStatus/Publish/ubuntu.22.04-x64/Main
+
+      - name: Build Telegram Music Status Ubuntu
+        run: dotnet publish ZloServerDiscordBot -c Release -r ubuntu.22.04-x64 -p:PublishSingleFile=true --self-contained true --output TelegramStatus/Publish/ubuntu.22.04-x64/Main/App
+
+      - name: Archive files ubuntu
+        run: |
+          cd TelegramStatus/Publish/ubuntu.22.04-x64
+          zip -r ubuntu.22.04-x64.zip *
+
+      - name: Build TokenGetter Windows
+        run: dotnet publish SpotifyBearerTokenGetter -c Release -r win-x64 -p:PublishSingleFile=true --output TelegramStatus/Publish/win-x64/Main
+
+      - name: Build Telegram Music Status Windows
+        run: dotnet publish ZloServerDiscordBot -c Release -r win-x64 -p:PublishSingleFile=true --output TelegramStatus/Publish/win-x64/Main/App
+
+      - name: Archive files ubuntu
+        run: |
+          cd TelegramStatus/Publish/win-x64
+          zip -r win-x64.zip *
+
+      - name: Create Release and Upload Assets
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          files: |
+            TelegramStatus/Publish/ubuntu.22.04-x64/ubuntu.22.04-x64.zip
+            elegramStatus/Publish/win-x64/win-x64.zip
+          generate_release_notes: true
+  
+  deploy:
+    needs: build-and-publish
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v1
+        with:
+          registry: docker.io
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build and Push Latest Docker Image
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          push: true
+          tags: docker.io/${{ secrets.DOCKER_USERNAME }}/zloserverdiscordbot:latest
+  
+  remove-old-artifacts:
+    needs: build-and-publish
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    
+    steps:
+      - name: Remove old artifacts
+        uses: c-hive/gha-remove-artifacts@v1
+        with:
+          age: '1 day'
+          skip-recent: 1
