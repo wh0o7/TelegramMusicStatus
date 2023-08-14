@@ -15,13 +15,13 @@ jobs:
       - name: Setup .NET Core SDK
         uses: actions/setup-dotnet@v3.0.3
         with:
-          dotnet-version: 6.0.20
+          dotnet-version: 6.x
 
       - name: Build TokenGetter Ubuntu
         run: dotnet publish SpotifyBearerTokenGetter -c Release -r ubuntu.22.04-x64 -p:PublishSingleFile=true --self-contained true --output TelegramStatus/Publish/ubuntu.22.04-x64/Main
 
       - name: Build Telegram Music Status Ubuntu
-        run: dotnet publish ZloServerDiscordBot -c Release -r ubuntu.22.04-x64 -p:PublishSingleFile=true --self-contained true --output TelegramStatus/Publish/ubuntu.22.04-x64/Main/App
+        run: dotnet publish TelegramMusicStatus -c Release -r ubuntu.22.04-x64 -p:PublishSingleFile=true --self-contained true --output TelegramStatus/Publish/ubuntu.22.04-x64/Main/App
 
       - name: Archive files ubuntu
         run: |
@@ -32,9 +32,9 @@ jobs:
         run: dotnet publish SpotifyBearerTokenGetter -c Release -r win-x64 -p:PublishSingleFile=true --output TelegramStatus/Publish/win-x64/Main
 
       - name: Build Telegram Music Status Windows
-        run: dotnet publish ZloServerDiscordBot -c Release -r win-x64 -p:PublishSingleFile=true --output TelegramStatus/Publish/win-x64/Main/App
+        run: dotnet publish TelegramMusicStatus -c Release -r win-x64 -p:PublishSingleFile=true --output TelegramStatus/Publish/win-x64/Main/App
 
-      - name: Archive files ubuntu
+      - name: Archive files windows
         run: |
           cd TelegramStatus/Publish/win-x64
           zip -r win-x64.zip *
@@ -46,7 +46,7 @@ jobs:
           release_name: Release ${{ github.ref }}
           files: |
             TelegramStatus/Publish/ubuntu.22.04-x64/ubuntu.22.04-x64.zip
-            elegramStatus/Publish/win-x64/win-x64.zip
+            TelegramStatus/Publish/win-x64/win-x64.zip
           generate_release_notes: true
   
   deploy:
@@ -71,7 +71,7 @@ jobs:
         with:
           context: .
           push: true
-          tags: docker.io/${{ secrets.DOCKER_USERNAME }}/zloserverdiscordbot:latest
+          tags: docker.io/${{ secrets.DOCKER_USERNAME }}/telegrammusicstatus:latest
   
   remove-old-artifacts:
     needs: build-and-publish
