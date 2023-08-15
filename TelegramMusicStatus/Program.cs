@@ -47,14 +47,15 @@ internal static class Program
 
     private static async void TimerElapsed(object? sender, ElapsedEventArgs? e)
     {
-        if (_aimpService is not null && await AIMPTask()) return;
-        if (_spotifyService is not null && await SpotifyTask()) return;
         if (_spotifyService is null && _aimpService is null)
         {
             Console.WriteLine(
                 "Both of services are disabled. Check your config.json for SpotifyAccount and/or AimpWebSocket");
             Console_CancelKeyPress(null, null);
         }
+        if (_spotifyService is not null && await SpotifyTask()) return;
+        if (_aimpService is not null && await AIMPTask()) return;
+
 
         if (_config?.Entries.Settings is null || !_config.Entries.Settings.IsDeployed)
         {
