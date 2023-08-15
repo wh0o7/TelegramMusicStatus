@@ -31,7 +31,7 @@ public class SpotifyMusicService : ISpotifyMusicService
             this._spotifyClient = new SpotifyClient(this._config.Entries.SpotifyAccount.BearerToken);
         }
 
-        Console.WriteLine("Spotify client started!");
+        Utils.WriteLine("Spotify client started!");
     }
 
     public async Task<(bool IsPlaying, string? Bio)> GetCurrentlyPlayingStatus()

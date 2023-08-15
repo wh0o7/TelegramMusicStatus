@@ -1,4 +1,6 @@
-﻿namespace TelegramMusicStatus.Services;
+﻿using ImprovedConsole;
+
+namespace TelegramMusicStatus.Services;
 
 public static class Utils
 {
@@ -11,5 +13,10 @@ public static class Utils
         int maxTrackInfoLength = maxCharacters - playingIndicator.Length;
         var trackInfo = input[..maxTrackInfoLength].TrimEnd();
         return $"{playingIndicator}{trackInfo}";
+    }
+
+    public static void WriteLine(string info)
+    {
+        ConsoleWrapper.WriteLine(info, LogType.Info, true);
     }
 }

@@ -12,6 +12,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <PackageReference Include="ImprovedСonsole" Version="1.1.6" />
         <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0-preview.6.23329.7"/>
         <PackageReference Include="SpotifyAPI.Web" Version="7.0.0"/>
         <PackageReference Include="SpotifyAPI.Web.Auth" Version="7.0.0" />

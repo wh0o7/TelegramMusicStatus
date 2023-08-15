@@ -30,7 +30,7 @@ public class TelegramStatusService : ITelegramStatusService
         if (bio == this._currentAbout) return;
         await this._telegramClient.Account_UpdateProfile(about: bio);
         this._currentAbout = bio;
-        Console.WriteLine("Bio changed to " + bio);
+        Utils.WriteLine("Bio changed to " + bio);
     }
 
     public async Task SetUserDefaultBio()

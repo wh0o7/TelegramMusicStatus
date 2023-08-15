@@ -45,15 +45,15 @@ public class AIMPMusicService : IAIMPMusicService
         _wssv.AddWebSocketService<APIService>("/aimp");
         _wssv.Start();
 
-        Console.WriteLine("WebSocket Server started.\nIP: " + _wssv.Address);
-        Console.WriteLine("Port: " + _wssv.Port);
+        Utils.WriteLine("WebSocket Server started.\nIP: " + _wssv.Address);
+        Utils.WriteLine("Port: " + _wssv.Port);
         return Task.CompletedTask;
     }
 
     public Task Close()
     {
         _wssv.Stop();
-        Console.WriteLine("WebSocket Server stopped.");
+        Utils.WriteLine("WebSocket Server stopped.");
         return Task.CompletedTask;
     }
 
