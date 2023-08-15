@@ -30,8 +30,8 @@ public class AIMPMusicService : IAIMPMusicService
     {
         protected override void OnMessage(MessageEventArgs e)
         {
+            if(e.IsPing) return;
             var receivedMessage = JsonConvert.DeserializeObject<TrackInfoMessage>(e.Data);
-
             IsPlaying = receivedMessage.IsPlaying;
             Artist = receivedMessage.Artist;
             TrackTitle = receivedMessage.TrackTitle;
