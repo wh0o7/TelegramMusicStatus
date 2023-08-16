@@ -50,7 +50,7 @@ TelegramMusicStatus is a project designed to keep your friends in the loop about
 
 - `TelegramAccount` 💬: Houses your Telegram API credentials.
 
-- `Settings` ⚙️: Customize app behavior, intervals, and bio updates.
+- `Settings` ⚙️: Customize app behavior, interval(min 10s, max 300s, default 30s), and bio updates.
 
 - `AimpWebSocket` 🎧: Set AIMP WebSocket settings.
 
