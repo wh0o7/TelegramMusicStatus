@@ -13,6 +13,7 @@ internal static class Program
     private static ITelegramStatusService? _telegramService;
     private static ISpotifyMusicService? _spotifyService;
     private static IAIMPMusicService? _aimpService;
+    private static ITasksService _musicService;
 
     private static void Main()
     {
@@ -30,11 +31,14 @@ internal static class Program
             serviceCollection.AddSingleton<ISpotifyMusicService, SpotifyMusicService>();
         if (_config.Entries.AimpWebSocket is not null)
             serviceCollection.AddSingleton<IAIMPMusicService, AIMPMusicService>();
+        if (_config.Entries.AimpWebSocket is not null || _config.Entries.SpotifyAccount is not null)
+            serviceCollection.AddSingleton<ITasksService, TasksService>();
         var serviceProvider = serviceCollection.BuildServiceProvider(true);
 
         _telegramService = serviceProvider.GetService<ITelegramStatusService>();
         _spotifyService = serviceProvider.GetService<ISpotifyMusicService>();
         _aimpService = serviceProvider.GetService<IAIMPMusicService>();
+        _musicService = serviceProvider.GetService<ITasksService>();
         _timer = new Timer(_config.Entries.Settings?.Interval is >= 10 and <= 300
             ? _config.Entries.Settings.Interval * 1000
             : 30000);
@@ -54,64 +58,14 @@ internal static class Program
             Console_CancelKeyPress(null, null);
         }
 
-        if (_spotifyService is not null && await SpotifyTask()) return;
-        if (_aimpService is not null && await AIMPTask()) return;
+        if (_spotifyService is not null && await _musicService.SpotifyTask()) return;
+        if (_aimpService is not null && await _musicService.AIMPTask()) return;
 
 
         if (_config?.Entries.Settings is null || !_config.Entries.Settings.IsDeployed)
         {
             await PausePrompt();
         }
-    }
-
-    private static async Task<bool> SpotifyTask()
-    {
-        var status = await _spotifyService!.GetCurrentlyPlayingStatus();
-        if (status.Bio is null)
-        {
-            Utils.WriteLine("Spotify web player paused.");
-            return false;
-        }
-
-        Utils.WriteLine(
-            $"(Spotify)   Current state is {(status.IsPlaying ? "playing" : "paused")}, now playing: {status.Bio}");
-
-        switch (status.IsPlaying)
-        {
-            case true:
-                await _telegramService?.ChangeUserBio(Utils.FormatTrackInfo(status.Bio))!;
-                return true;
-            case false when _config?.Entries.Settings is { IsDefaultBioOnPause: true }:
-                await _telegramService?.SetUserDefaultBio()!;
-                break;
-        }
-
-        return false;
-    }
-
-    private static async Task<bool> AIMPTask()
-    {
-        var status = await _aimpService?.GetCurrentlyPlayingStatus()!;
-        if (status.Bio is null)
-        {
-            Utils.WriteLine("AIMP player paused.");
-            return false;
-        }
-
-        Utils.WriteLine(
-            $"(AIMP)   Current state is {(status.IsPlaying ? "playing" : "paused")}, now playing: {status.Bio}");
-
-        switch (status.IsPlaying)
-        {
-            case true:
-                await _telegramService?.ChangeUserBio(Utils.FormatTrackInfo(status.Bio))!;
-                return true;
-            case false when _config?.Entries.Settings is { IsDefaultBioOnPause: true }:
-                await _telegramService?.SetUserDefaultBio()!;
-                break;
-        }
-
-        return false;
     }
 
     private static Task PausePrompt()

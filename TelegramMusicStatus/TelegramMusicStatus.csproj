@@ -9,6 +9,7 @@
         <AssemblyOriginatorKeyFile>Andrey Kosinets_0x13823130_public.asc</AssemblyOriginatorKeyFile>
         <PublicSign>false</PublicSign>
         <ApplicationIcon>telegramstatusicon.ico</ApplicationIcon>
+        <UserSecretsId>408129bc-43fe-4397-b33b-d86bdb8a1b77</UserSecretsId>
     </PropertyGroup>
 
     <ItemGroup>
