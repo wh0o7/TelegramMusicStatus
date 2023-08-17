@@ -72,6 +72,9 @@ For Telegram magic, craft an app on the [Telegram API website](https://my.telegr
 
 For a step-by-step setup and more, head over to the project repository.
 
+**AIMPWebSocket Requirements:**
+For AIMPWebSocket to work properly, you'll need to install the [AIMP plugin](https://github.com/wh0o7/CurrentlyPlayingInfoAIMPPlugin) 😊. This plugin is necessary to capture information about the currently playing track in AIMP and transmit it over the WebSocket connection. Follow the installation instructions provided in the plugin's repository to ensure seamless integration between AIMP and AIMPWebSocket.
+
 ## Contributing 🤝
 
 Open to suggestions! Feel free to raise issues or make pull requests on [GitHub](https://github.com/wh0o7/TelegramMusicStatus/issues).
