@@ -36,12 +36,25 @@ public class TelegramStatusService : ITelegramStatusService
     public async Task SetUserDefaultBio()
         => await this.ChangeUserBio(this._userAbout);
 
+    public async Task SaveCurrentUserBioToConfig()
+    {
+        var status = await GetCurrentUserBio();
+        if (this._userAbout == status) return;
+        this._userAbout = status;
+        if (Utils.IsValidTrackInfoFormat(this._userAbout) || this._config.Entries.UserBio == this._userAbout) return;
+        Config<MainConfig>.SaveConfig(this._config.Entries with { UserBio = this._userAbout });
+    }
+
     private async Task Init()
     {
         await this._telegramClient.LoginUserIfNeeded();
-        this._userAbout = (await this._telegramClient.Users_GetFullUser(new InputUser(this._telegramClient.UserId,
-            this._telegramClient.User.access_hash))).full_user.about;
+        this._userAbout = this._config.Entries.UserBio;
+        await SaveCurrentUserBioToConfig();
     }
+
+    public async Task<string> GetCurrentUserBio() => (await this._telegramClient.Users_GetFullUser(new InputUser(
+        this._telegramClient.UserId,
+        this._telegramClient.User.access_hash))).full_user.about;
 
     private string? TelegramConfig(string what)
     {

@@ -1,13 +1,19 @@
-﻿using SpotifyAPI.Web;
+﻿using System.Text.Json.Serialization;
+using SpotifyAPI.Web;
 
 namespace TelegramMusicStatus.Config;
 
 public record MainConfig(
-    Telegram TelegramAccount,
-    Spotify SpotifyAccount,
     SpotifyApp SpotifyApp,
+    Spotify SpotifyAccount,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    Telegram TelegramAccount,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     Settings Settings,
-    AIMPWebSocket AimpWebSocket
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    AIMPWebSocket AimpWebSocket,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    string UserBio
 );
 
 public record Telegram(string ApiId, string ApiHash, string PhoneNumber, string MFAPassword);
