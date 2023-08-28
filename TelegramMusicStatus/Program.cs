@@ -13,7 +13,7 @@ internal static class Program
     private static ITelegramStatusService? _telegramService;
     private static ISpotifyMusicService? _spotifyService;
     private static IAIMPMusicService? _aimpService;
-    private static ITasksService _musicService;
+    private static ITasksService? _musicService;
 
     private static void Main()
     {
@@ -39,7 +39,7 @@ internal static class Program
         _spotifyService = serviceProvider.GetService<ISpotifyMusicService>();
         _aimpService = serviceProvider.GetService<IAIMPMusicService>();
         _musicService = serviceProvider.GetService<ITasksService>();
-        _timer = new Timer(_config.Entries.Settings?.Interval is >= 10 and <= 300
+        _timer = new Timer(_config.Entries.Settings.Interval is >= 10 and <= 300
             ? _config.Entries.Settings.Interval * 1000
             : 30000);
         _timer.Elapsed += TimerElapsed;
@@ -61,11 +61,13 @@ internal static class Program
         if (_spotifyService is not null && await _musicService.SpotifyTask()) return;
         if (_aimpService is not null && await _musicService.AIMPTask()) return;
 
-
         if (_config?.Entries.Settings is null || !_config.Entries.Settings.IsDeployed)
         {
             await PausePrompt();
         }
+
+        if (_config?.Entries.Settings is not null && _config.Entries.Settings.IsDefaultBioOnPause)
+            await _telegramService.SetUserDefaultBio();
     }
 
     private static Task PausePrompt()

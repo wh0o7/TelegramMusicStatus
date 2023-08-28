@@ -1,6 +1,4 @@
-﻿using TelegramMusicStatus.Config;
-
-namespace TelegramMusicStatus.Services;
+﻿namespace TelegramMusicStatus.Services;
 
 public interface ITasksService
 {
@@ -11,23 +9,21 @@ public interface ITasksService
 public class TasksService : ITasksService
 {
     private ITelegramStatusService _telegramService;
-    private IConfig<MainConfig> _config;
     private ISpotifyMusicService _spotifyService;
     private IAIMPMusicService _aimpMusicService;
 
-    public TasksService(ITelegramStatusService telegramService, IConfig<MainConfig> config,
-        IAIMPMusicService aimpMusicService = null, ISpotifyMusicService spotifyService = null)
+    public TasksService(ITelegramStatusService telegramService, IAIMPMusicService aimpMusicService = null,
+        ISpotifyMusicService spotifyService = null)
     {
         this._telegramService = telegramService;
         this._spotifyService = spotifyService;
-        this._config = config;
         this._aimpMusicService = aimpMusicService;
     }
 
     public async Task<bool> SpotifyTask()
     {
-        if (_spotifyService is null) return false;
-        var status = await _spotifyService.GetCurrentlyPlayingStatus();
+        if (this._spotifyService is null) return false;
+        var status = await this._spotifyService.GetCurrentlyPlayingStatus();
         if (status.Bio is null)
         {
             Utils.WriteLine("Spotify web player paused.");
@@ -37,14 +33,10 @@ public class TasksService : ITasksService
         Utils.WriteLine(
             $"(Spotify)   Current state is {(status.IsPlaying ? "playing" : "paused")}, now playing: {status.Bio}");
 
-        switch (status.IsPlaying)
+        if (status.IsPlaying)
         {
-            case true:
-                await _telegramService.ChangeUserBio(Utils.FormatTrackInfo(status.Bio));
-                return true;
-            case false when _config.Entries.Settings is { IsDefaultBioOnPause: true }:
-                await _telegramService.SetUserDefaultBio();
-                break;
+            await this._telegramService.ChangeUserBio(Utils.FormatTrackInfo(status.Bio));
+            return true;
         }
 
         return false;
@@ -52,8 +44,8 @@ public class TasksService : ITasksService
 
     public async Task<bool> AIMPTask()
     {
-        if (_aimpMusicService is null) return false;
-        var status = await _aimpMusicService.GetCurrentlyPlayingStatus();
+        if (this._aimpMusicService is null) return false;
+        var status = await this._aimpMusicService.GetCurrentlyPlayingStatus();
         if (status.Bio is null)
         {
             Utils.WriteLine("AIMP player paused.");
@@ -63,14 +55,10 @@ public class TasksService : ITasksService
         Utils.WriteLine(
             $"(AIMP)   Current state is {(status.IsPlaying ? "playing" : "paused")}, now playing: {status.Bio}");
 
-        switch (status.IsPlaying)
+        if (status.IsPlaying)
         {
-            case true:
-                await _telegramService.ChangeUserBio(Utils.FormatTrackInfo(status.Bio));
-                return true;
-            case false when _config.Entries.Settings is { IsDefaultBioOnPause: true }:
-                await _telegramService.SetUserDefaultBio();
-                break;
+            await this._telegramService.ChangeUserBio(Utils.FormatTrackInfo(status.Bio));
+            return true;
         }
 
         return false;

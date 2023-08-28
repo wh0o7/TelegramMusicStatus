@@ -43,7 +43,7 @@ public class TelegramStatusService : ITelegramStatusService
         this._currentBio = status;
         if (Utils.IsValidTrackInfoFormat(status) || this._config.Entries.UserBio == status) return;
         this._userDefaultBio = status;
-        Config<MainConfig>.SaveConfig(this._config.Entries with { UserBio = this._userDefaultBio });
+        await Config<MainConfig>.SaveConfig(this._config.Entries with { UserBio = this._userDefaultBio });
     }
 
     private async Task Init()
