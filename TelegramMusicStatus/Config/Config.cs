@@ -24,13 +24,13 @@ public class Config<T> : IConfig<T>
         return data;
     }
 
-    public static void SaveConfig(T data)
+    public static async Task SaveConfig(T data)
     {
         var jsonData = JsonSerializer.Serialize(data, new JsonSerializerOptions
         {
             WriteIndented = true
         });
-        File.WriteAllText(FilePath, jsonData);
+        await File.WriteAllTextAsync(FilePath, jsonData);
     }
 
     public T Entries { get; } = ReadConfig();
