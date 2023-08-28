@@ -11,7 +11,9 @@ public record MainConfig(
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     Settings Settings,
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    AIMPWebSocket AimpWebSocket
+    AIMPWebSocket AimpWebSocket,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    string UserBio
 );
 
 public record SpotifyApp(string ClientId, string ClientSecret);
