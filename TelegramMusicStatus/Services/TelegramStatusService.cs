@@ -40,8 +40,9 @@ public class TelegramStatusService : ITelegramStatusService
     {
         var status = await GetCurrentUserBio();
         if (this._userAbout == status) return;
+        this._currentAbout = status;
+        if (Utils.IsValidTrackInfoFormat(status) || this._config.Entries.UserBio == status) return;
         this._userAbout = status;
-        if (Utils.IsValidTrackInfoFormat(this._userAbout) || this._config.Entries.UserBio == this._userAbout) return;
         Config<MainConfig>.SaveConfig(this._config.Entries with { UserBio = this._userAbout });
     }
 
@@ -49,6 +50,7 @@ public class TelegramStatusService : ITelegramStatusService
     {
         await this._telegramClient.LoginUserIfNeeded();
         this._userAbout = this._config.Entries.UserBio;
+        this._currentAbout = this._userAbout;
         await SaveCurrentUserBioToConfig();
     }
 
