@@ -14,6 +14,9 @@ internal static class Program
     private static ISpotifyMusicService? _spotifyService;
     private static IAIMPMusicService? _aimpService;
     private static ITasksService? _musicService;
+    private static int _interval;
+    private static int _waitInterval;
+    private static bool IsWaitMode { get; set; }
 
     private static void Main()
     {
@@ -39,9 +42,13 @@ internal static class Program
         _spotifyService = serviceProvider.GetService<ISpotifyMusicService>();
         _aimpService = serviceProvider.GetService<IAIMPMusicService>();
         _musicService = serviceProvider.GetService<ITasksService>();
-        _timer = new Timer(_config.Entries.Settings.Interval is >= 10 and <= 300
+        _interval = _config.Entries.Settings.Interval is >= 10 and <= 300
             ? _config.Entries.Settings.Interval * 1000
-            : 30000);
+            : 30000;
+        _waitInterval = _config.Entries.Settings.WaitInterval is >= 20 and <= 600
+            ? _config.Entries.Settings.WaitInterval * 1000
+            : _interval * 2;
+        _timer = new Timer(_interval);
         _timer.Elapsed += TimerElapsed;
         Task.Run(() => TimerElapsed(null, null)).Wait();
         _timer.Start();
@@ -57,15 +64,15 @@ internal static class Program
                 "Both of services are disabled. Check your config.json for SpotifyAccount and/or AimpWebSocket");
             Console_CancelKeyPress(null, null);
         }
-
-        if (_spotifyService is not null && await _musicService.SpotifyTask()) return;
-        if (_aimpService is not null && await _musicService.AIMPTask()) return;
-
-        if (_config?.Entries.Settings is null || !_config.Entries.Settings.IsDeployed)
+    
+        if ((_spotifyService is not null && await _musicService.SpotifyTask()) ||
+            (_aimpService is not null && await _musicService.AIMPTask()))
         {
-            await PausePrompt();
+            if (IsWaitMode) await DisableWaitMode();
+            return;
         }
-
+        if (_config?.Entries.Settings is null || !_config.Entries.Settings.IsDeployed) await PausePrompt();
+        if (!IsWaitMode) await EnableWaitMode();
         if (_config?.Entries.Settings is not null && _config.Entries.Settings.IsDefaultBioOnPause)
             await _telegramService.SetUserDefaultBio();
     }
@@ -93,5 +100,22 @@ internal static class Program
         if (_aimpService is not null) await _aimpService.Close()!;
         await _telegramService.Close();
         Environment.Exit(0);
+    }
+
+    private static Task EnableWaitMode()
+    {
+        IsWaitMode = true;
+        _timer!.Interval = _waitInterval;
+        Utils.WriteLine($"Wait mode enabled. Current interval is {_waitInterval/1000}s");
+        return Task.CompletedTask;
+    }
+
+
+    private static Task DisableWaitMode()
+    {
+        IsWaitMode = false;
+        _timer!.Interval = _interval;
+        Utils.WriteLine($"Wait mode disabled. Current interval is {_interval/1000}s");
+        return Task.CompletedTask;
     }
 }
