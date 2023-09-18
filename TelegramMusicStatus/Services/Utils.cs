@@ -5,7 +5,7 @@ namespace TelegramMusicStatus.Services;
 
 public static class Utils
 {
-    public static string? FormatTrackInfo(string input)
+    public static string FormatTrackInfo(string input)
     {
         int maxCharacters = 70;
         var playingIndicator = "Now Playing: ";

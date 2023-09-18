@@ -9,11 +9,11 @@ public interface ITasksService
 public class TasksService : ITasksService
 {
     private ITelegramStatusService _telegramService;
-    private ISpotifyMusicService _spotifyService;
-    private IAIMPMusicService _aimpMusicService;
+    private ISpotifyMusicService? _spotifyService;
+    private IAIMPMusicService? _aimpMusicService;
 
-    public TasksService(ITelegramStatusService telegramService, IAIMPMusicService aimpMusicService = null,
-        ISpotifyMusicService spotifyService = null)
+    public TasksService(ITelegramStatusService telegramService, IAIMPMusicService? aimpMusicService = null,
+        ISpotifyMusicService? spotifyService = null)
     {
         this._telegramService = telegramService;
         this._spotifyService = spotifyService;

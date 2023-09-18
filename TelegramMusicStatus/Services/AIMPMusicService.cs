@@ -26,7 +26,7 @@ public class AIMPMusicService : IAIMPMusicService
         Init().Wait();
     }
 
-    private class APIService : WebSocketBehavior
+    private class ApiService : WebSocketBehavior
     {
         protected override void OnMessage(MessageEventArgs e)
         {
@@ -40,7 +40,7 @@ public class AIMPMusicService : IAIMPMusicService
     {
         _wssv = new WebSocketServer(
             $"ws://{this._config.Entries.AimpWebSocket.Ip}:{this._config.Entries.AimpWebSocket.Port}");
-        _wssv.AddWebSocketService<APIService>("/aimp");
+        _wssv.AddWebSocketService<ApiService>("/aimp");
         _wssv.Start();
 
         Utils.WriteLine("WebSocket Server started.\nIP: " + _wssv.Address);
