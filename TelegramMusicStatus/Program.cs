@@ -52,7 +52,6 @@ internal static class Program
         _timer.Elapsed += TimerElapsed;
         Task.Run(() => TimerElapsed(null, null)).Wait();
         _timer.Start();
-
         await Task.Delay(-1);
     }
 

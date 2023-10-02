@@ -56,6 +56,12 @@ public class TelegramStatusService : ITelegramStatusService
         this._userDefaultBio = this._config.Entries.UserBio;
         this._currentBio = this._userDefaultBio;
         await SaveCurrentBioToConfig();
+        var timer = new System.Timers.Timer(TimeSpan.FromHours(4).TotalMilliseconds);
+        timer.Elapsed += async (_, _) =>
+        {
+            await this._telegramClient.LoginUserIfNeeded(reloginOnFailedResume:true);
+        };
+        timer.Start();
     }
 
     public async Task<string?> GetCurrentBio() => (await this._telegramClient.Users_GetFullUser(new InputUser(
