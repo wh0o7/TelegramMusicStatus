@@ -23,7 +23,13 @@ public class AIMPMusicService : IAIMPMusicService
     public AIMPMusicService(IConfig<MainConfig> config)
     {
         this._config = config;
-        Init().Wait();
+        _wssv = new WebSocketServer(
+            $"ws://{this._config.Entries.AimpWebSocket.Ip}:{this._config.Entries.AimpWebSocket.Port}");
+        _wssv.AddWebSocketService<ApiService>("/aimp");
+        _wssv.Log.Level = LogLevel.Debug;
+        _wssv.Start();
+        Utils.WriteLine("WebSocket Server started.\nIP: " + _wssv.Address);
+        Utils.WriteLine("Port: " + _wssv.Port);
     }
 
     private class ApiService : WebSocketBehavior
@@ -33,19 +39,8 @@ public class AIMPMusicService : IAIMPMusicService
             if (e.IsPing || string.IsNullOrEmpty(e.Data)) return;
             var message = JsonConvert.DeserializeObject<TrackInfoMessage>(e.Data);
             if (message is not null) (TrackTitle, Artist, IsPlaying) = message;
+            Sessions.Broadcast($"Successfully retrieve:{TrackTitle}-{Artist} is {IsPlaying}");
         }
-    }
-
-    public Task Init()
-    {
-        _wssv = new WebSocketServer(
-            $"ws://{this._config.Entries.AimpWebSocket.Ip}:{this._config.Entries.AimpWebSocket.Port}");
-        _wssv.AddWebSocketService<ApiService>("/aimp");
-        _wssv.Start();
-
-        Utils.WriteLine("WebSocket Server started.\nIP: " + _wssv.Address);
-        Utils.WriteLine("Port: " + _wssv.Port);
-        return Task.CompletedTask;
     }
 
     public Task Close()
