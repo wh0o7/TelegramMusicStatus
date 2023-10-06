@@ -26,7 +26,7 @@ public class AIMPMusicService : IAIMPMusicService
         _wssv = new WebSocketServer(
             $"ws://{this._config.Entries.AimpWebSocket.Ip}:{this._config.Entries.AimpWebSocket.Port}");
         _wssv.AddWebSocketService<ApiService>("/aimp");
-        _wssv.Log.Level = LogLevel.Debug;
+        _wssv.Log.Level = LogLevel.Info;
         _wssv.Start();
         Utils.WriteLine("WebSocket Server started.\nIP: " + _wssv.Address);
         Utils.WriteLine("Port: " + _wssv.Port);
@@ -34,6 +34,12 @@ public class AIMPMusicService : IAIMPMusicService
 
     private class ApiService : WebSocketBehavior
     {
+        protected override void OnClose (CloseEventArgs e)
+        {
+            Console.WriteLine("Connection closed. IsPlaying is false.");
+            (TrackTitle, Artist, IsPlaying) = (null,null, false);
+        }
+        
         protected override void OnMessage(MessageEventArgs e)
         {
             if (e.IsPing || string.IsNullOrEmpty(e.Data)) return;
