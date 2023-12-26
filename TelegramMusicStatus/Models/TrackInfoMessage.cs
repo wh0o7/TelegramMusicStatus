@@ -1,18 +1,11 @@
 ﻿namespace TelegramMusicStatus.Models;
 
-public class TrackInfoMessage
+public class TrackInfoMessage(string trackTitle, string artist, bool isPlaying)
 {
-    public TrackInfoMessage(string trackTitle, string artist, bool isPlaying)
-    {
-        TrackTitle = trackTitle;
-        Artist = artist;
-        IsPlaying = isPlaying;
-    }
+    public string TrackTitle { get; set; } = trackTitle;
+    public string Artist { get; set; } = artist;
+    public bool IsPlaying { get; set; } = isPlaying;
 
-    public string TrackTitle { get; set; }
-    public string Artist { get; set; }
-    public bool IsPlaying { get; set; }
-    
     public void Deconstruct(out string trackTitle, out string artist, out bool isPlaying)
     {
         trackTitle = TrackTitle;

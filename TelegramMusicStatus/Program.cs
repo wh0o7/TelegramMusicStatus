@@ -63,17 +63,18 @@ internal static class Program
                 "Both of services are disabled. Check your config.json for SpotifyAccount and/or AimpWebSocket");
             Console_CancelKeyPress(null, null);
         }
-    
-        if ((_spotifyService is not null && await _musicService.SpotifyTask()) ||
-            (_aimpService is not null && await _musicService.AIMPTask()))
+
+        if (_musicService is not null && ((_spotifyService is not null && await _musicService.SpotifyTask()) ||
+                                          (_aimpService is not null && await _musicService.AimpTask())))
         {
             if (IsWaitMode) await DisableWaitMode();
             return;
         }
+
         if (_config?.Entries.Settings is null || !_config.Entries.Settings.IsDeployed) await PausePrompt();
         if (!IsWaitMode) await EnableWaitMode();
-        if (_config?.Entries.Settings is not null && _config.Entries.Settings.IsDefaultBioOnPause)
-            await _telegramService.SetUserDefaultBio();
+        if (_telegramService is not null && _config?.Entries.Settings is not null &&
+            _config.Entries.Settings.IsDefaultBioOnPause) await _telegramService.SetUserDefaultBio();
     }
 
     private static Task PausePrompt()
@@ -105,7 +106,7 @@ internal static class Program
     {
         IsWaitMode = true;
         _timer!.Interval = _waitInterval;
-        Utils.WriteLine($"Wait mode enabled. Current interval is {_waitInterval/1000}s");
+        Utils.WriteLine($"Wait mode enabled. Current interval is {_waitInterval / 1000}s");
         return Task.CompletedTask;
     }
 
@@ -114,7 +115,7 @@ internal static class Program
     {
         IsWaitMode = false;
         _timer!.Interval = _interval;
-        Utils.WriteLine($"Wait mode disabled. Current interval is {_interval/1000}s");
+        Utils.WriteLine($"Wait mode disabled. Current interval is {_interval / 1000}s");
         return Task.CompletedTask;
     }
 }

@@ -3,27 +3,19 @@
 public interface ITasksService
 {
     Task<bool> SpotifyTask();
-    Task<bool> AIMPTask();
+    Task<bool> AimpTask();
 }
 
-public class TasksService : ITasksService
+public class TasksService(
+    ITelegramStatusService telegramService,
+    IAIMPMusicService? aimpService = null,
+    ISpotifyMusicService? spotifyService = null)
+    : ITasksService
 {
-    private ITelegramStatusService _telegramService;
-    private ISpotifyMusicService? _spotifyService;
-    private IAIMPMusicService? _aimpMusicService;
-
-    public TasksService(ITelegramStatusService telegramService, IAIMPMusicService? aimpMusicService = null,
-        ISpotifyMusicService? spotifyService = null)
-    {
-        this._telegramService = telegramService;
-        this._spotifyService = spotifyService;
-        this._aimpMusicService = aimpMusicService;
-    }
-
     public async Task<bool> SpotifyTask()
     {
-        if (this._spotifyService is null) return false;
-        var status = await this._spotifyService.GetCurrentlyPlayingStatus();
+        if (spotifyService is null) return false;
+        var status = await spotifyService.GetCurrentlyPlayingStatus();
         if (status.Bio is null)
         {
             Utils.WriteLine("Spotify web player paused.");
@@ -33,19 +25,16 @@ public class TasksService : ITasksService
         Utils.WriteLine(
             $"(Spotify)   Current state is {(status.IsPlaying ? "playing" : "paused")}, now playing: {status.Bio}");
 
-        if (status.IsPlaying)
-        {
-            await this._telegramService.ChangeUserBio(Utils.FormatTrackInfo(status.Bio));
-            return true;
-        }
+        if (!status.IsPlaying) return false;
+        await telegramService.ChangeUserBio(Utils.FormatTrackInfo(status.Bio));
+        return true;
 
-        return false;
     }
 
-    public async Task<bool> AIMPTask()
+    public async Task<bool> AimpTask()
     {
-        if (this._aimpMusicService is null) return false;
-        var status = await this._aimpMusicService.GetCurrentlyPlayingStatus();
+        if (aimpService is null) return false;
+        var status = await aimpService.GetCurrentlyPlayingStatus();
         if (status.Bio is null)
         {
             Utils.WriteLine("AIMP player paused.");
@@ -55,12 +44,8 @@ public class TasksService : ITasksService
         Utils.WriteLine(
             $"(AIMP)   Current state is {(status.IsPlaying ? "playing" : "paused")}, now playing: {status.Bio}");
 
-        if (status.IsPlaying)
-        {
-            await this._telegramService.ChangeUserBio(Utils.FormatTrackInfo(status.Bio));
-            return true;
-        }
-
-        return false;
+        if (!status.IsPlaying) return false;
+        await telegramService.ChangeUserBio(Utils.FormatTrackInfo(status.Bio));
+        return true;
     }
 }
