@@ -4,6 +4,7 @@ public interface ITasksService
 {
     Task<bool> SpotifyTask();
     Task<bool> AimpTask();
+    Task<bool> LastFmTask();
 }
 
 public class TasksService : ITasksService
@@ -11,12 +12,14 @@ public class TasksService : ITasksService
     private readonly ITelegramStatusService _telegramService;
     private readonly IAIMPMusicService? _aimpService;
     private readonly ISpotifyMusicService? _spotifyService;
+    private readonly ILastFmService? _lastFmService;
 
-    public TasksService(ITelegramStatusService telegramService,
+    public TasksService(ITelegramStatusService telegramService, ILastFmService? lastFmService = null,
         IAIMPMusicService? aimpService = null,
         ISpotifyMusicService? spotifyService = null)
     {
         _telegramService = telegramService;
+        _lastFmService = lastFmService;
         _aimpService = aimpService;
         _spotifyService = spotifyService;
     }
@@ -37,7 +40,6 @@ public class TasksService : ITasksService
         if (!status.IsPlaying) return false;
         await _telegramService.ChangeUserBio(Utils.FormatTrackInfo(status.Bio));
         return true;
-
     }
 
     public async Task<bool> AimpTask()
@@ -52,6 +54,24 @@ public class TasksService : ITasksService
 
         Utils.WriteLine(
             $"(AIMP)   Current state is {(status.IsPlaying ? "playing" : "paused")}, now playing: {status.Bio}");
+
+        if (!status.IsPlaying) return false;
+        await _telegramService.ChangeUserBio(Utils.FormatTrackInfo(status.Bio));
+        return true;
+    }
+
+    public async Task<bool> LastFmTask()
+    {
+        if (_lastFmService is null) return false;
+        var status = await _lastFmService.GetCurrentlyPlayingStatus();
+        if (status.Bio is null)
+        {
+            Utils.WriteLine("AIMP player paused.");
+            return false;
+        }
+
+        Utils.WriteLine(
+            $"(LastFm)   Current state is {(status.IsPlaying ? "playing" : "paused")}, now playing: {status.Bio}");
 
         if (!status.IsPlaying) return false;
         await _telegramService.ChangeUserBio(Utils.FormatTrackInfo(status.Bio));

@@ -13,6 +13,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <PackageReference Include="Hqub.Last.fm" Version="2.1.0" />
         <PackageReference Include="ImprovedСonsole" Version="1.1.6" />
         <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0-preview.6.23329.7"/>
         <PackageReference Include="SpotifyAPI.Web" Version="7.0.0"/>

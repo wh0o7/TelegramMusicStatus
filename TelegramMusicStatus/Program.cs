@@ -13,6 +13,7 @@ internal static class Program
     private static ITelegramStatusService? _telegramService;
     private static ISpotifyMusicService? _spotifyService;
     private static IAIMPMusicService? _aimpService;
+    private static ILastFmService? _lastFmService;
     private static ITasksService? _musicService;
     private static int _interval;
     private static int _waitInterval;
@@ -34,13 +35,17 @@ internal static class Program
             serviceCollection.AddSingleton<ISpotifyMusicService, SpotifyMusicService>();
         if (_config.Entries.AimpWebSocket is not null)
             serviceCollection.AddSingleton<IAIMPMusicService, AIMPMusicService>();
-        if (_config.Entries.AimpWebSocket is not null || _config.Entries.SpotifyAccount is not null)
+        if (_config.Entries.LastFmApi is not null)
+            serviceCollection.AddSingleton<ILastFmService, LastFmService>();
+        if (_config.Entries.AimpWebSocket is not null || _config.Entries.SpotifyAccount is not null ||
+            _config.Entries.LastFmApi is not null)
             serviceCollection.AddSingleton<ITasksService, TasksService>();
         var serviceProvider = serviceCollection.BuildServiceProvider(true);
 
         _telegramService = serviceProvider.GetService<ITelegramStatusService>();
         _spotifyService = serviceProvider.GetService<ISpotifyMusicService>();
         _aimpService = serviceProvider.GetService<IAIMPMusicService>();
+        _lastFmService = serviceProvider.GetService<LastFmService>();
         _musicService = serviceProvider.GetService<ITasksService>();
         _interval = _config.Entries.Settings.Interval is >= 10 and <= 300
             ? _config.Entries.Settings.Interval * 1000
@@ -65,7 +70,8 @@ internal static class Program
         }
 
         if (_musicService is not null && ((_spotifyService is not null && await _musicService.SpotifyTask()) ||
-                                          (_aimpService is not null && await _musicService.AimpTask())))
+                                          (_aimpService is not null && await _musicService.AimpTask()) ||
+                                          (_lastFmService is not null && await _musicService.LastFmTask())))
         {
             if (IsWaitMode) await DisableWaitMode();
             return;
