@@ -4,7 +4,7 @@
 
 ## Overview 🎶
 
-TelegramMusicStatus is a project designed to keep your friends in the loop about your music preferences. It updates your Telegram status with the currently playing track from Spotify or AIMP audio player. Whether you're grooving to a tune or enjoying a podcast, your Telegram status will reflect your musical mood. Even during pauses in playback, your status will remain fresh and catchy.
+TelegramMusicStatus is a project designed to keep your friends in the loop about your music preferences. It updates your Telegram status with the currently playing track from Spotify or AIMP audio player and can retrieve info about what is currently playing from LastFm. Whether you're grooving to a tune or enjoying a podcast, your Telegram status will reflect your musical mood. Even during pauses in playback, your status will remain fresh and catchy.
 
 ## Installation 🚀
 
