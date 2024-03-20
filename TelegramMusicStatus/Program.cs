@@ -45,7 +45,7 @@ internal static class Program
         _telegramService = serviceProvider.GetService<ITelegramStatusService>();
         _spotifyService = serviceProvider.GetService<ISpotifyMusicService>();
         _aimpService = serviceProvider.GetService<IAIMPMusicService>();
-        _lastFmService = serviceProvider.GetService<LastFmService>();
+        _lastFmService = serviceProvider.GetService<ILastFmService>();
         _musicService = serviceProvider.GetService<ITasksService>();
         _interval = _config.Entries.Settings.Interval is >= 10 and <= 300
             ? _config.Entries.Settings.Interval * 1000
@@ -62,10 +62,10 @@ internal static class Program
 
     private static async void TimerElapsed(object? sender, ElapsedEventArgs? e)
     {
-        if (_spotifyService is null && _aimpService is null)
+        if (_spotifyService is null && _aimpService is null && _lastFmService is null)
         {
             Utils.WriteLine(
-                "Both of services are disabled. Check your config.json for SpotifyAccount and/or AimpWebSocket");
+                "All of services are disabled. Check your config.json for SpotifyAccount and/or AimpWebSocket and/or LastFmApi");
             Console_CancelKeyPress(null, null);
         }
 
