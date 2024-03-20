@@ -29,6 +29,6 @@ public class LastFmService : ILastFmService
         var currentlyPlaying = currentlyPlayingPage.Items.FirstOrDefault();
         return currentlyPlaying is null
             ? (false, null)
-            : (true, $"{currentlyPlaying.Name} - {currentlyPlaying.Artist}");
+            : (true, $"{currentlyPlaying.Name} - {currentlyPlaying.Artist.Name}");
     }
 }
