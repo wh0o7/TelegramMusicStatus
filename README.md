@@ -37,6 +37,10 @@ TelegramMusicStatus is a project designed to keep your friends in the loop about
     "IsDefaultBioOnPause": false,
     "Interval": 45
   },
+  "LastFmApi": {
+    "ApiKey": "LASTFM_API_KEY",
+    "Username": "LASTFM_USERNAME"
+  },
   "AimpWebSocket": {
     "Ip": "127.0.0.1",
     "Port": 5543
@@ -54,9 +58,15 @@ TelegramMusicStatus is a project designed to keep your friends in the loop about
 
 - `AimpWebSocket` 🎧: Set AIMP WebSocket settings.
 
+- `LastFmApi`: Set LastFm api settings. 
+
 ## Spotify Application Registration 🎶
 
 To blend in with Spotify, create an app on the [Spotify Developer Dashboard](https://developer.spotify.com/dashboard/applications). Get your Client ID and Client Secret for `SpotifyApp` setup.
+
+## Last.fm Application Registration 🎵
+
+To integrate with Last.fm, you'll need to create an application on the [Last.fm Developer Account Registration](https://www.last.fm/api/account/create) page. Once registered, you'll receive your API key for `Last.fm` setup. This key will allow your application to access Last.fm's API for various music-related functionalities.
 
 ## Telegram Application Registration 💬
 
