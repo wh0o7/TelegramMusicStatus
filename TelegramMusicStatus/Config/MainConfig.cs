@@ -13,9 +13,9 @@ public record MainConfig(
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     AIMPWebSocket AimpWebSocket,
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    string? UserBio,
+    LastFm LastFmApi,
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    LastFm LastFmApi
+    string? UserBio
 );
 
 public record Telegram(string ApiId, string ApiHash, string PhoneNumber, string MFAPassword);
