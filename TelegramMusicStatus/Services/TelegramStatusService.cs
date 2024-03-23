@@ -1,4 +1,5 @@
-﻿using TelegramMusicStatus.Config;
+﻿using System.Security.Cryptography;
+using TelegramMusicStatus.Config;
 using TL;
 using WTelegram;
 
@@ -15,7 +16,7 @@ public class TelegramStatusService : ITelegramStatusService
 {
     private Client _telegramClient;
     private IConfig<MainConfig> _config;
-    private string? _userDefaultBio;
+    private List<string?> _userDefaultBioList;
     private string? _currentBio;
 
     public TelegramStatusService(IConfig<MainConfig> config)
@@ -23,6 +24,16 @@ public class TelegramStatusService : ITelegramStatusService
         this._config = config;
         this._telegramClient = new Client(TelegramConfig);
         this.Init().Wait();
+    }
+
+    private async Task Init()
+    {
+        await this._telegramClient.LoginUserIfNeeded();
+        this._userDefaultBioList = [..this._config.Entries.UserBio];
+        await SaveCurrentBioToConfig();
+        var timer = new System.Timers.Timer(TimeSpan.FromHours(4).TotalMilliseconds);
+        timer.Elapsed += async (_, _) => { await this._telegramClient.LoginUserIfNeeded(reloginOnFailedResume: true); };
+        timer.Start();
     }
 
     public async Task ChangeUserBio(string? bio)
@@ -34,39 +45,46 @@ public class TelegramStatusService : ITelegramStatusService
     }
 
     public async Task SetUserDefaultBio()
-        => await this.ChangeUserBio(this._userDefaultBio);
+    {
+        switch (this._userDefaultBioList.Count)
+        {
+            case 0:
+                Utils.WriteLine("Bio didn't change to default. No default bio.");
+                return;
+            case 1:
+                await this.ChangeUserBio(this._userDefaultBioList[0] ?? string.Empty);
+                break;
+            default:
+                await this.ChangeUserBio(GetRandomBio() ?? string.Empty);
+                break;
+        }
+    }
 
-    public async Task SaveCurrentBioToConfig()
+    private async Task SaveCurrentBioToConfig()
     {
         var status = await GetCurrentBio();
-        if (this._userDefaultBio == status) return;
+        if (this._userDefaultBioList[0] == status) return;
         this._currentBio = status;
-        if (string.IsNullOrEmpty(status?.Trim()) || Utils.IsValidTrackInfoFormat(status) || this._config.Entries.UserBio == status)
+        if (string.IsNullOrEmpty(status?.Trim()) || Utils.IsValidTrackInfoFormat(status) ||
+            this._config.Entries.UserBio?[0] == status)
         {
             await SetUserDefaultBio();
             return;
         }
-        this._userDefaultBio = status;
-        await Config<MainConfig>.SaveConfig(this._config.Entries with { UserBio = this._userDefaultBio });
+
+        this._userDefaultBioList = [status];
+        await Config<MainConfig>.SaveConfig(this._config.Entries with { UserBio = this._userDefaultBioList.ToArray() });
     }
 
-    private async Task Init()
-    {
-        await this._telegramClient.LoginUserIfNeeded();
-        this._userDefaultBio = this._config.Entries.UserBio;
-        this._currentBio = this._userDefaultBio;
-        await SaveCurrentBioToConfig();
-        var timer = new System.Timers.Timer(TimeSpan.FromHours(4).TotalMilliseconds);
-        timer.Elapsed += async (_, _) =>
-        {
-            await this._telegramClient.LoginUserIfNeeded(reloginOnFailedResume:true);
-        };
-        timer.Start();
-    }
-
-    public async Task<string?> GetCurrentBio() => (await this._telegramClient.Users_GetFullUser(new InputUser(
+    private async Task<string?> GetCurrentBio() => (await this._telegramClient.Users_GetFullUser(new InputUser(
         this._telegramClient.UserId,
         this._telegramClient.User.access_hash))).full_user.about;
+
+    public Task Close()
+    {
+        this._telegramClient.Dispose();
+        return Task.CompletedTask;
+    }
 
     private string? TelegramConfig(string what)
     {
@@ -79,20 +97,24 @@ public class TelegramStatusService : ITelegramStatusService
                 Console.Write("Code: ");
                 return Console.ReadLine();
             case "password":
-                if (_config.Entries.TelegramAccount.MFAPassword is null)
-                {
-                    Console.Write("Cloud password(2FA): ");
-                    return Console.ReadLine();
-                }
+                if (_config.Entries.TelegramAccount.MfaPassword is not null)
+                    return _config.Entries.TelegramAccount.MfaPassword;
+                Console.Write("Cloud password(2FA): ");
+                return Console.ReadLine();
 
-                return _config.Entries.TelegramAccount.MFAPassword;
             default: return null;
         }
     }
 
-    public Task Close()
+    private string? GetRandomBio()
     {
-        this._telegramClient.Dispose();
-        return Task.CompletedTask;
+        var filteredList = _userDefaultBioList.Where(bio => !string.IsNullOrEmpty(bio) && bio != _currentBio).ToArray();
+        if (!filteredList.Any()) return null;
+        if (filteredList.Length == 1) return filteredList.First();
+        using var rng = RandomNumberGenerator.Create();
+        var bytes = new byte[4];
+        rng.GetBytes(bytes);
+        int index = BitConverter.ToInt32(bytes, 0) % filteredList.Length;
+        return filteredList[index];
     }
 }
