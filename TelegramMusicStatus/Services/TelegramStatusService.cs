@@ -16,7 +16,7 @@ public class TelegramStatusService : ITelegramStatusService
 {
     private Client _telegramClient;
     private IConfig<MainConfig> _config;
-    private List<string?> _userDefaultBioList;
+    private List<string> _userDefaultBioList;
     private string? _currentBio;
 
     public TelegramStatusService(IConfig<MainConfig> config)
@@ -29,7 +29,7 @@ public class TelegramStatusService : ITelegramStatusService
     private async Task Init()
     {
         await this._telegramClient.LoginUserIfNeeded();
-        this._userDefaultBioList = [..this._config.Entries.UserBio];
+        this._userDefaultBioList = [..this._config.Entries.UserBio?.Where(bio => !string.IsNullOrEmpty(bio))];
         await SaveCurrentBioToConfig();
         var timer = new System.Timers.Timer(TimeSpan.FromHours(4).TotalMilliseconds);
         timer.Elapsed += async (_, _) => { await this._telegramClient.LoginUserIfNeeded(reloginOnFailedResume: true); };
@@ -52,7 +52,7 @@ public class TelegramStatusService : ITelegramStatusService
                 Utils.WriteLine("Bio didn't change to default. No default bio.");
                 return;
             case 1:
-                await this.ChangeUserBio(this._userDefaultBioList[0] ?? string.Empty);
+                await this.ChangeUserBio(this._userDefaultBioList[0]);
                 break;
             default:
                 await this.ChangeUserBio(GetRandomBio() ?? string.Empty);
@@ -63,16 +63,15 @@ public class TelegramStatusService : ITelegramStatusService
     private async Task SaveCurrentBioToConfig()
     {
         var status = await GetCurrentBio();
-        if (this._userDefaultBioList[0] == status) return;
+        if (this._userDefaultBioList.Any(s => s == status)) return;
         this._currentBio = status;
-        if (string.IsNullOrEmpty(status?.Trim()) || Utils.IsValidTrackInfoFormat(status) ||
-            this._config.Entries.UserBio?[0] == status)
+        if (string.IsNullOrEmpty(status?.Trim()) || Utils.IsValidTrackInfoFormat(status))
         {
             await SetUserDefaultBio();
             return;
         }
 
-        this._userDefaultBioList = [status];
+        this._userDefaultBioList.Add(status);
         await Config<MainConfig>.SaveConfig(this._config.Entries with { UserBio = this._userDefaultBioList.ToArray() });
     }
 
@@ -108,13 +107,10 @@ public class TelegramStatusService : ITelegramStatusService
 
     private string? GetRandomBio()
     {
-        var filteredList = _userDefaultBioList.Where(bio => !string.IsNullOrEmpty(bio) && bio != _currentBio).ToArray();
+        var filteredList = _userDefaultBioList.Where(bio => bio != _currentBio).ToArray();
         if (!filteredList.Any()) return null;
         if (filteredList.Length == 1) return filteredList.First();
-        using var rng = RandomNumberGenerator.Create();
-        var bytes = new byte[4];
-        rng.GetBytes(bytes);
-        int index = BitConverter.ToInt32(bytes, 0) % filteredList.Length;
+        int index = Random.Shared.Next(0, filteredList.Length - 1);
         return filteredList[index];
     }
 }
