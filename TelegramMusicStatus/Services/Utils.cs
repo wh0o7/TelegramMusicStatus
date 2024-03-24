@@ -5,21 +5,20 @@ namespace TelegramMusicStatus.Services;
 
 public static class Utils
 {
+    private static int _maxCharacters = 70;
+    private static string _playingIndicator = "Now Playing: ";
     public static string FormatTrackInfo(string input)
     {
-        int maxCharacters = 70;
-        var playingIndicator = "Now Playing: ";
-
-        if (input.Length <= maxCharacters - playingIndicator.Length) return $"{playingIndicator}{input}";
-        int maxTrackInfoLength = maxCharacters - playingIndicator.Length;
-        var trackInfo = input[..maxTrackInfoLength].TrimEnd();
-        return $"{playingIndicator}{trackInfo}";
+        var status = $"{_playingIndicator}{input}";
+        return input.Length <= _maxCharacters - _playingIndicator.Length ? status : FormatStatus(status);
     }
     public static bool IsValidTrackInfoFormat(string input)
     {
         const string pattern = "^Now Playing: .+ - .+$";
         return Regex.IsMatch(input, pattern);
     }
+    
+    public static string FormatStatus(string input) => input.Length <= _maxCharacters ? input :$"{input[..(_maxCharacters - 3)]}...".TrimEnd();
 
     public static void WriteLine(string info)
     {

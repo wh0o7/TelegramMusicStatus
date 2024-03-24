@@ -15,10 +15,10 @@ public record MainConfig(
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     LastFm LastFmApi,
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    string? UserBio
+    string?[]? UserBio
 );
 
-public record Telegram(string ApiId, string ApiHash, string PhoneNumber, string MFAPassword);
+public record Telegram(string ApiId, string ApiHash, string PhoneNumber, string? MfaPassword);
 
 public record Spotify(string BearerToken, AuthorizationCodeTokenResponse? Response);
 
