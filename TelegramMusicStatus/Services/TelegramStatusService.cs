@@ -14,14 +14,15 @@ public interface ITelegramStatusService
 
 public class TelegramStatusService : ITelegramStatusService
 {
-    private Client _telegramClient;
-    private IConfig<MainConfig> _config;
-    private List<string> _userDefaultBioList;
+    private readonly Client _telegramClient;
+    private readonly IConfig<MainConfig> _config;
+    private readonly List<string> _userDefaultBioList;
     private string? _currentBio;
 
     public TelegramStatusService(IConfig<MainConfig> config)
     {
         this._config = config;
+        this._userDefaultBioList = [..this._config.Entries.UserBio?.Where(bio => !string.IsNullOrEmpty(bio))];
         this._telegramClient = new Client(TelegramConfig);
         this.Init().Wait();
     }
@@ -29,7 +30,6 @@ public class TelegramStatusService : ITelegramStatusService
     private async Task Init()
     {
         await this._telegramClient.LoginUserIfNeeded();
-        this._userDefaultBioList = [..this._config.Entries.UserBio?.Where(bio => !string.IsNullOrEmpty(bio))];
         await SaveCurrentBioToConfig();
         var timer = new System.Timers.Timer(TimeSpan.FromHours(4).TotalMilliseconds);
         timer.Elapsed += async (_, _) => { await this._telegramClient.LoginUserIfNeeded(reloginOnFailedResume: true); };
