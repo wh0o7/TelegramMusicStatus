@@ -1,5 +1,6 @@
 ﻿using System.Text.RegularExpressions;
 using ImprovedConsole;
+using Swan;
 
 namespace TelegramMusicStatus.Services;
 
@@ -15,7 +16,7 @@ public static class Utils
     public static bool IsValidTrackInfoFormat(string input)
     {
         const string pattern = "^Now Playing: .+ - .+$";
-        return Regex.IsMatch(input, pattern);
+        return Regex.IsMatch(input.Replace(".", ""), pattern);
     }
     
     public static string FormatStatus(string input) => input.Length <= _maxCharacters ? input :$"{input[..(_maxCharacters - 3)]}...".TrimEnd();
