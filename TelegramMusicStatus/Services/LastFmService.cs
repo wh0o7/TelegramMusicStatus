@@ -11,15 +11,13 @@ public interface ILastFmService : IMusicService
 
 public class LastFmService : ILastFmService
 {
-    private IConfig<MainConfig> _config;
     private readonly LastfmClient _client;
     private readonly string _username;
 
     public LastFmService(IConfig<MainConfig> config)
     {
-        this._config = config;
-        this._client = new LastfmClient(this._config.Entries.LastFmApi.ApiKey);
-        this._username = this._config.Entries.LastFmApi.Username;
+        this._client = new LastfmClient(config.Entries.LastFmApi.ApiKey);
+        this._username = config.Entries.LastFmApi.Username;
     }
 
     public async Task<(bool IsPlaying, string? Bio)> GetCurrentlyPlayingStatus()
