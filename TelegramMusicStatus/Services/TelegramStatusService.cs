@@ -24,7 +24,7 @@ public class TelegramStatusService : ITelegramStatusService
     {
         this._config = config;
         this._playingIndicator = config.Entries.PlayingIndicator;
-        this._userDefaultBioList = [..this._config.Entries.UserBio?.Where(bio => !string.IsNullOrEmpty(bio))];
+        this._userDefaultBioList = _config.Entries.UserBio?.Where(bio => !string.IsNullOrEmpty(bio)).ToList() ?? new();
         this._telegramClient = new Client(TelegramConfig);
         this.Init().Wait();
     }
