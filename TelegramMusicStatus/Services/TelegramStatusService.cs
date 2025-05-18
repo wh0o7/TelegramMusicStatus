@@ -18,10 +18,12 @@ public class TelegramStatusService : ITelegramStatusService
     private readonly IConfig<MainConfig> _config;
     private readonly List<string> _userDefaultBioList;
     private string? _currentBio;
+    private readonly string? _playingIndicator;
 
     public TelegramStatusService(IConfig<MainConfig> config)
     {
         this._config = config;
+        this._playingIndicator = config.Entries.PlayingIndicator;
         this._userDefaultBioList = [..this._config.Entries.UserBio?.Where(bio => !string.IsNullOrEmpty(bio))];
         this._telegramClient = new Client(TelegramConfig);
         this.Init().Wait();
@@ -65,7 +67,7 @@ public class TelegramStatusService : ITelegramStatusService
         var status = await GetCurrentBio();
         if (this._userDefaultBioList.Any(s => s == status)) return;
         this._currentBio = status;
-        if (string.IsNullOrEmpty(status?.Trim()) || Utils.IsValidTrackInfoFormat(status))
+        if (string.IsNullOrEmpty(status?.Trim()) || Utils.IsValidTrackInfoFormat(status,  _playingIndicator))
         {
             await SetUserDefaultBio();
             return;

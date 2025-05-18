@@ -15,7 +15,9 @@ public record MainConfig(
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     LastFm LastFmApi,
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    string?[]? UserBio
+    string?[]? UserBio,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    string? PlayingIndicator
 );
 
 public record Telegram(string ApiId, string ApiHash, string PhoneNumber, string? MfaPassword);

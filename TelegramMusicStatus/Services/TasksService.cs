@@ -1,4 +1,6 @@
-﻿namespace TelegramMusicStatus.Services;
+﻿using TelegramMusicStatus.Config;
+
+namespace TelegramMusicStatus.Services;
 
 public interface ITasksService
 {
@@ -13,12 +15,12 @@ public class TasksService : ITasksService
     private readonly IAIMPMusicService? _aimpService;
     private readonly ISpotifyMusicService? _spotifyService;
     private readonly ILastFmService? _lastFmService;
+    private readonly string? _playingIndicator;
 
-    public TasksService(ITelegramStatusService telegramService, ILastFmService? lastFmService = null,
-        IAIMPMusicService? aimpService = null,
-        ISpotifyMusicService? spotifyService = null)
+    public TasksService(ITelegramStatusService telegramService, IConfig<MainConfig> config, ILastFmService? lastFmService = null, IAIMPMusicService? aimpService = null, ISpotifyMusicService? spotifyService = null)
     {
         _telegramService = telegramService;
+        _playingIndicator = config.Entries.PlayingIndicator;
         _lastFmService = lastFmService;
         _aimpService = aimpService;
         _spotifyService = spotifyService;
@@ -38,7 +40,7 @@ public class TasksService : ITasksService
             $"(Spotify)   Current state is {(status.IsPlaying ? "playing" : "paused")}, now playing: {status.Bio}");
 
         if (!status.IsPlaying) return false;
-        await _telegramService.ChangeUserBio(Utils.FormatTrackInfo(status.Bio));
+        await _telegramService.ChangeUserBio(Utils.FormatTrackInfo(status.Bio, _playingIndicator));
         return true;
     }
 
@@ -56,7 +58,7 @@ public class TasksService : ITasksService
             $"(AIMP)   Current state is {(status.IsPlaying ? "playing" : "paused")}, now playing: {status.Bio}");
 
         if (!status.IsPlaying) return false;
-        await _telegramService.ChangeUserBio(Utils.FormatTrackInfo(status.Bio));
+        await _telegramService.ChangeUserBio(Utils.FormatTrackInfo(status.Bio, _playingIndicator));
         return true;
     }
 
@@ -74,7 +76,7 @@ public class TasksService : ITasksService
             $"(LastFm)   Current state is {(status.IsPlaying ? "playing" : "paused")}, now playing: {status.Bio}");
 
         if (!status.IsPlaying) return false;
-        await _telegramService.ChangeUserBio(Utils.FormatTrackInfo(status.Bio));
+        await _telegramService.ChangeUserBio(Utils.FormatTrackInfo(status.Bio, _playingIndicator));
         return true;
     }
 }
