@@ -14,7 +14,9 @@ internal static class Program
     private static ISpotifyMusicService? _spotifyService;
     private static IAIMPMusicService? _aimpService;
     private static ILastFmService? _lastFmService;
+    private static IYandexMusicService? _yandexMusicService;
     private static ITasksService? _musicService;
+
     private static int _interval;
     private static int _waitInterval;
     private static bool IsWaitMode { get; set; }
@@ -31,12 +33,10 @@ internal static class Program
         var serviceCollection = new ServiceCollection()
             .AddSingleton(typeof(IConfig<>), typeof(Config<>))
             .AddSingleton<ITelegramStatusService, TelegramStatusService>();
-        if (_config.Entries.SpotifyAccount is not null)
-            serviceCollection.AddSingleton<ISpotifyMusicService, SpotifyMusicService>();
-        if (_config.Entries.AimpWebSocket is not null)
-            serviceCollection.AddSingleton<IAIMPMusicService, AIMPMusicService>();
-        if (_config.Entries.LastFmApi is not null)
-            serviceCollection.AddSingleton<ILastFmService, LastFmService>();
+        if (_config.Entries.SpotifyAccount is not null) serviceCollection.AddSingleton<ISpotifyMusicService, SpotifyMusicService>();
+        if (_config.Entries.AimpWebSocket is not null) serviceCollection.AddSingleton<IAIMPMusicService, AIMPMusicService>();
+        if (_config.Entries.LastFmApi is not null) serviceCollection.AddSingleton<ILastFmService, LastFmService>();
+        if (_config.Entries.YandexMusicAccount is not null) serviceCollection.AddSingleton<IYandexMusicService, YandexMusicService>();
         if (_config.Entries.AimpWebSocket is not null || _config.Entries.SpotifyAccount is not null ||
             _config.Entries.LastFmApi is not null)
             serviceCollection.AddSingleton<ITasksService, TasksService>();
@@ -46,6 +46,8 @@ internal static class Program
         _spotifyService = serviceProvider.GetService<ISpotifyMusicService>();
         _aimpService = serviceProvider.GetService<IAIMPMusicService>();
         _lastFmService = serviceProvider.GetService<ILastFmService>();
+        _yandexMusicService = serviceProvider.GetService<IYandexMusicService>();
+
         _musicService = serviceProvider.GetService<ITasksService>();
         _interval = _config.Entries.Settings.Interval is >= 10 and <= 300
             ? _config.Entries.Settings.Interval * 1000
@@ -69,9 +71,10 @@ internal static class Program
             Console_CancelKeyPress(null, null);
         }
 
-        if (_musicService is not null && ((_spotifyService is not null && await _musicService.SpotifyTask()) ||
-                                          (_aimpService is not null && await _musicService.AimpTask()) ||
-                                          (_lastFmService is not null && await _musicService.LastFmTask())))
+        if (_musicService is not null && (_spotifyService is not null && await _musicService.SpotifyTask() ||
+                                          _aimpService is not null && await _musicService.AimpTask() ||
+                                          _lastFmService is not null && await _musicService.LastFmTask() ||
+                                          _yandexMusicService is not null && await _musicService.YandexMusicTask()))
         {
             if (IsWaitMode) await DisableWaitMode();
             return;
