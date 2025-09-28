@@ -27,7 +27,7 @@ public sealed class YandexMusicService : IYandexMusicService
 
         this._api = new YandexMusicApi();
         this._api.User.Authorize(this._storage, ym.Token);
-        
+
         this._player = this._api.Ynison.GetPlayer(this._storage);
         this._player.Connect();
         Thread.Sleep(5000);
@@ -41,7 +41,7 @@ public sealed class YandexMusicService : IYandexMusicService
         {
             var status = this._player.State.PlayerState?.Status;
             if (status == null || status.Paused) return (false, null);
-            
+
             var track = this._player.Current;
             var bio = $"{track.Title} - {string.Join(", ", track.Artists.Select(a => a.Name))}";
 

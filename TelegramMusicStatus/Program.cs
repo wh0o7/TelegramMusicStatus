@@ -74,7 +74,7 @@ internal static class Program
         var isYandex = _yandexMusicService is not null && await _musicService.YandexMusicTask();
         if (_musicService is not null && (_spotifyService is not null && await _musicService.SpotifyTask() ||
                                           _aimpService is not null && await _musicService.AimpTask() ||
-                                          _lastFmService is not null && await _musicService.LastFmTask() || isYandex));
+                                          _lastFmService is not null && await _musicService.LastFmTask() || isYandex)) ;
         {
             if (IsWaitMode) await DisableWaitMode();
             return;

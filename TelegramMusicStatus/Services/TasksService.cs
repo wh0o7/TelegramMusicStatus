@@ -21,18 +21,18 @@ public class TasksService : ITasksService
 
     public TasksService(ITelegramStatusService telegramService, IConfig<MainConfig> config, IYandexMusicService? yandexMusicService = null, ILastFmService? lastFmService = null, IAIMPMusicService? aimpService = null, ISpotifyMusicService? spotifyService = null)
     {
-        _telegramService = telegramService;
+        this._telegramService = telegramService;
         this._yandexMusicService = yandexMusicService;
-        _playingIndicator = config.Entries.PlayingIndicator;
-        _lastFmService = lastFmService;
-        _aimpService = aimpService;
-        _spotifyService = spotifyService;
+        this._playingIndicator = config.Entries.PlayingIndicator;
+        this._lastFmService = lastFmService;
+        this._aimpService = aimpService;
+        this._spotifyService = spotifyService;
     }
 
     public async Task<bool> SpotifyTask()
     {
-        if (_spotifyService is null) return false;
-        var status = await _spotifyService.GetCurrentlyPlayingStatus();
+        if (this._spotifyService is null) return false;
+        var status = await this._spotifyService.GetCurrentlyPlayingStatus();
         if (status.Bio is null)
         {
             Utils.WriteLine("(Spotify)   Player paused.");
@@ -43,14 +43,14 @@ public class TasksService : ITasksService
             $"(Spotify)   Current state is {(status.IsPlaying ? "playing" : "paused")}, now playing: {status.Bio}");
 
         if (!status.IsPlaying) return false;
-        await _telegramService.ChangeUserBio(Utils.FormatTrackInfo(status.Bio, _playingIndicator));
+        await this._telegramService.ChangeUserBio(Utils.FormatTrackInfo(status.Bio, this._playingIndicator));
         return true;
     }
 
     public async Task<bool> AimpTask()
     {
-        if (_aimpService is null) return false;
-        var status = await _aimpService.GetCurrentlyPlayingStatus();
+        if (this._aimpService is null) return false;
+        var status = await this._aimpService.GetCurrentlyPlayingStatus();
         if (status.Bio is null)
         {
             Utils.WriteLine("(AIMP)   Player paused.");
@@ -61,14 +61,14 @@ public class TasksService : ITasksService
             $"(AIMP)   Current state is {(status.IsPlaying ? "playing" : "paused")}, now playing: {status.Bio}");
 
         if (!status.IsPlaying) return false;
-        await _telegramService.ChangeUserBio(Utils.FormatTrackInfo(status.Bio, _playingIndicator));
+        await this._telegramService.ChangeUserBio(Utils.FormatTrackInfo(status.Bio, this._playingIndicator));
         return true;
     }
 
     public async Task<bool> LastFmTask()
     {
-        if (_lastFmService is null) return false;
-        var status = await _lastFmService.GetCurrentlyPlayingStatus();
+        if (this._lastFmService is null) return false;
+        var status = await this._lastFmService.GetCurrentlyPlayingStatus();
         if (status.Bio is null)
         {
             Utils.WriteLine("(Last Fm)   Player paused.");
@@ -78,7 +78,7 @@ public class TasksService : ITasksService
         Utils.WriteLine($"(LastFm)   Current state is {(status.IsPlaying ? "playing" : "paused")}, now playing: {status.Bio}");
 
         if (!status.IsPlaying) return false;
-        await _telegramService.ChangeUserBio(Utils.FormatTrackInfo(status.Bio, _playingIndicator));
+        await this._telegramService.ChangeUserBio(Utils.FormatTrackInfo(status.Bio, this._playingIndicator));
         return true;
     }
 
@@ -86,7 +86,7 @@ public class TasksService : ITasksService
     public async Task<bool> YandexMusicTask()
     {
         if (this._yandexMusicService is null) return false;
-        var status = await _yandexMusicService.GetCurrentlyPlayingStatus();
+        var status = await this._yandexMusicService.GetCurrentlyPlayingStatus();
         if (status.Bio is null)
         {
             Utils.WriteLine("(Yandex Music)   Player paused.");
@@ -97,7 +97,7 @@ public class TasksService : ITasksService
             $"(YandexMusic)   Current state is {(status.IsPlaying ? "playing" : "paused")}, now playing: {status.Bio}");
 
         if (!status.IsPlaying) return false;
-        await _telegramService.ChangeUserBio(Utils.FormatTrackInfo(status.Bio, _playingIndicator));
+        await this._telegramService.ChangeUserBio(Utils.FormatTrackInfo(status.Bio, this._playingIndicator));
         return true;
     }
 }

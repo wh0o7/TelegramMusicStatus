@@ -15,11 +15,14 @@ public static class Utils
     }
     public static bool IsValidTrackInfoFormat(string input, string? playingIndicator = null)
     {
-         var pattern = $"^{playingIndicator ?? PlayingIndicator} .+ - .+$";
+        var pattern = $"^{playingIndicator ?? PlayingIndicator} .+ - .+$";
         return Regex.IsMatch(input.Replace(".", ""), pattern);
     }
-    
-    public static string FormatStatus(string input) => input.Length <= MaxCharacters ? input :$"{input[..(MaxCharacters - 3)]}...".TrimEnd();
+
+    public static string FormatStatus(string input)
+    {
+        return input.Length <= MaxCharacters ? input : $"{input[..(MaxCharacters - 3)]}...".TrimEnd();
+    }
 
     public static void WriteLine(string info)
     {
