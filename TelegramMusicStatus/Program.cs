@@ -38,7 +38,7 @@ internal static class Program
         if (_config.Entries.LastFmApi is not null) serviceCollection.AddSingleton<ILastFmService, LastFmService>();
         if (_config.Entries.YandexMusicAccount is not null) serviceCollection.AddSingleton<IYandexMusicService, YandexMusicService>();
         if (_config.Entries.AimpWebSocket is not null || _config.Entries.SpotifyAccount is not null ||
-            _config.Entries.LastFmApi is not null)
+            _config.Entries.LastFmApi is not null || _config.Entries.YandexMusicAccount is not null)
             serviceCollection.AddSingleton<ITasksService, TasksService>();
         var serviceProvider = serviceCollection.BuildServiceProvider(true);
 
@@ -64,17 +64,17 @@ internal static class Program
 
     private static async void TimerElapsed(object? sender, ElapsedEventArgs? e)
     {
-        if (_spotifyService is null && _aimpService is null && _lastFmService is null)
+        if (_spotifyService is null && _aimpService is null && _lastFmService is null && _yandexMusicService is null)
         {
             Utils.WriteLine(
                 "All of services are disabled. Check your config.json for SpotifyAccount and/or AimpWebSocket and/or LastFmApi");
             Console_CancelKeyPress(null, null);
         }
 
+        var isYandex = _yandexMusicService is not null && await _musicService.YandexMusicTask();
         if (_musicService is not null && (_spotifyService is not null && await _musicService.SpotifyTask() ||
                                           _aimpService is not null && await _musicService.AimpTask() ||
-                                          _lastFmService is not null && await _musicService.LastFmTask() ||
-                                          _yandexMusicService is not null && await _musicService.YandexMusicTask()))
+                                          _lastFmService is not null && await _musicService.LastFmTask() || isYandex));
         {
             if (IsWaitMode) await DisableWaitMode();
             return;
