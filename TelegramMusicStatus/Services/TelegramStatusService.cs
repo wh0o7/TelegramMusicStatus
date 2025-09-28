@@ -24,15 +24,15 @@ public class TelegramStatusService : ITelegramStatusService
     {
         this._config = config;
         this._playingIndicator = config.Entries.PlayingIndicator;
-        this._userDefaultBioList = _config.Entries.UserBio?.Where(bio => !string.IsNullOrEmpty(bio)).ToList() ?? new();
-        this._telegramClient = new Client(TelegramConfig);
+        this._userDefaultBioList = this._config.Entries.UserBio?.Where(bio => !string.IsNullOrEmpty(bio)).ToList() ?? new List<string?>();
+        this._telegramClient = new Client(this.TelegramConfig);
         this.Init().Wait();
     }
 
     private async Task Init()
     {
         await this._telegramClient.LoginUserIfNeeded();
-        await SaveCurrentBioToConfig();
+        await this.SaveCurrentBioToConfig();
         var timer = new System.Timers.Timer(TimeSpan.FromHours(4).TotalMilliseconds);
         timer.Elapsed += async (_, _) => { await this._telegramClient.LoginUserIfNeeded(reloginOnFailedResume: true); };
         timer.Start();
@@ -57,19 +57,19 @@ public class TelegramStatusService : ITelegramStatusService
                 await this.ChangeUserBio(this._userDefaultBioList[0]);
                 break;
             default:
-                await this.ChangeUserBio(GetRandomBio() ?? string.Empty);
+                await this.ChangeUserBio(this.GetRandomBio() ?? string.Empty);
                 break;
         }
     }
 
     private async Task SaveCurrentBioToConfig()
     {
-        var status = await GetCurrentBio();
+        var status = await this.GetCurrentBio();
         if (this._userDefaultBioList.Any(s => s == status)) return;
         this._currentBio = status;
-        if (string.IsNullOrEmpty(status?.Trim()) || Utils.IsValidTrackInfoFormat(status,  _playingIndicator))
+        if (string.IsNullOrEmpty(status?.Trim()) || Utils.IsValidTrackInfoFormat(status, this._playingIndicator))
         {
-            await SetUserDefaultBio();
+            await this.SetUserDefaultBio();
             return;
         }
 
@@ -77,9 +77,12 @@ public class TelegramStatusService : ITelegramStatusService
         await Config<MainConfig>.SaveConfig(this._config.Entries with { UserBio = this._userDefaultBioList.ToArray() });
     }
 
-    private async Task<string?> GetCurrentBio() => (await this._telegramClient.Users_GetFullUser(new InputUser(
-        this._telegramClient.UserId,
-        this._telegramClient.User.access_hash))).full_user.about;
+    private async Task<string?> GetCurrentBio()
+    {
+        return (await this._telegramClient.Users_GetFullUser(new InputUser(
+            this._telegramClient.UserId,
+            this._telegramClient.User.access_hash))).full_user.about;
+    }
 
     public Task Close()
     {
@@ -91,15 +94,15 @@ public class TelegramStatusService : ITelegramStatusService
     {
         switch (what)
         {
-            case "api_id": return _config.Entries.TelegramAccount.ApiId;
-            case "api_hash": return _config.Entries.TelegramAccount.ApiHash;
-            case "phone_number": return _config.Entries.TelegramAccount.PhoneNumber;
+            case "api_id": return this._config.Entries.TelegramAccount.ApiId;
+            case "api_hash": return this._config.Entries.TelegramAccount.ApiHash;
+            case "phone_number": return this._config.Entries.TelegramAccount.PhoneNumber;
             case "verification_code":
                 Console.Write("Code: ");
                 return Console.ReadLine();
             case "password":
-                if (_config.Entries.TelegramAccount.MfaPassword is not null)
-                    return _config.Entries.TelegramAccount.MfaPassword;
+                if (this._config.Entries.TelegramAccount.MfaPassword is not null)
+                    return this._config.Entries.TelegramAccount.MfaPassword;
                 Console.Write("Cloud password(2FA): ");
                 return Console.ReadLine();
 
@@ -109,10 +112,10 @@ public class TelegramStatusService : ITelegramStatusService
 
     private string? GetRandomBio()
     {
-        var filteredList = _userDefaultBioList.Where(bio => bio != _currentBio).ToArray();
+        var filteredList = this._userDefaultBioList.Where(bio => bio != this._currentBio).ToArray();
         if (!filteredList.Any()) return null;
         if (filteredList.Length == 1) return filteredList.First();
-        int index = Random.Shared.Next(0, filteredList.Length - 1);
+        var index = Random.Shared.Next(0, filteredList.Length - 1);
         return filteredList[index];
     }
 }

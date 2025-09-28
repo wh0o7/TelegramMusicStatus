@@ -37,6 +37,13 @@ TelegramMusicStatus - это проект, задачей которого яв�
     "IsDefaultBioOnPause": false,
     "Interval": 45
   },
+  "LastFmApi": {
+    "ApiKey": "LASTFM_API_KEY",
+    "Username": "LASTFM_USERNAME"
+  },
+  "YandexMusicAccount": {
+    "Token": "YANDEX_TOKEN"
+  },
   "AimpWebSocket": {
     "Ip": "127.0.0.1",
     "Port": 5543
@@ -53,6 +60,10 @@ TelegramMusicStatus - это проект, задачей которого яв�
 - `Settings` ⚙️: Настройте поведение приложения, интервал(мин 10с, макс 300с,по умолчанию 30с) и обновление био.
 
 - `AimpWebSocket` 🎧: Установите настройки AIMP WebSocket.
+
+- `LastFmApi` 🎵: Содержит токен для Last FM и ваш username.
+
+- `YandexMusicAccount` 🎵: Содержит Yandex bearer токен.
 
 ## Регистрация Spotify Application 🎶
 
@@ -78,6 +89,14 @@ TelegramMusicStatus - это проект, задачей которого яв�
 ## Вопросы или обратная связь? 🤔
 
 Если у вас есть вопросы или вы хотите поделиться отзывами, свяжитесь со мной в чате [wh0o7 heaven](https://t.me/+D-T_xElzA003Nzcy). Давайте сделаем проект еще лучше вместе! 🎵🎉
+
+## Используемые библиотеки 📚
+
+- [Telegram](https://github.com/wiz0u/WTelegramClient) — клиент для работы с Telegram API
+- [Spotify](https://github.com/JohnnyCrazy/SpotifyAPI-NET) — библиотека для интеграции со Spotify
+- [Yandex Music](https://github.com/K1llMan/Yandex.Music.Api) — API для Яндекс Музыки
+- [Last FM](https://github.com/avatar29A/Last.fm) — библиотека для взаимодействия с Last.fm
+- [Console Logs](https://github.com/litolax/Improved-Console) — улучшенный вывод логов в консоль
 
 ## Лицензия 📄
 

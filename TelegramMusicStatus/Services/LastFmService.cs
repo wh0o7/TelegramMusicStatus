@@ -23,7 +23,7 @@ public class LastFmService : ILastFmService
     public async Task<(bool IsPlaying, string? Bio)> GetCurrentlyPlayingStatus()
     {
         var currentlyPlayingPage =
-            await this._client.User.GetRecentTracksAsync(this._username, from: DateTime.Now.AddMinutes(-5), limit: 1);
+            await this._client.User.GetRecentTracksAsync(this._username, DateTime.Now.AddMinutes(-5), limit: 1);
         var currentlyPlaying = currentlyPlayingPage.Items.FirstOrDefault();
         return currentlyPlaying is null
             ? (false, null)

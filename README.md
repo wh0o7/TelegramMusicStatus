@@ -10,7 +10,7 @@ TelegramMusicStatus is a project designed to keep your friends in the loop about
 
 1. Start by configuring the plugin. Create a `config.json` file in the project directory using the example below.
 
-2. Run the application. Depending on your setup, it will connect to Spotify, AIMP WebSocket, or both.
+2. Run the application. Depending on your setup, it will connect to Spotify, AIMP WebSocket, Last FM or Yandex Music.
 
 ## Configuration Example 🎛️
 
@@ -41,6 +41,9 @@ TelegramMusicStatus is a project designed to keep your friends in the loop about
     "ApiKey": "LASTFM_API_KEY",
     "Username": "LASTFM_USERNAME"
   },
+  "YandexMusicAccount": {
+    "Token": "YANDEX_TOKEN"
+  },
   "AimpWebSocket": {
     "Ip": "127.0.0.1",
     "Port": 5543
@@ -58,7 +61,9 @@ TelegramMusicStatus is a project designed to keep your friends in the loop about
 
 - `AimpWebSocket` 🎧: Set AIMP WebSocket settings.
 
-- `LastFmApi`: Set LastFm api settings. 
+- `LastFmApi` 🎵: Set LastFm api settings.
+
+- `YandexMusicAccount` 🎵: Holds the Yandex bearer token.
 
 ## Spotify Application Registration 🎶
 
@@ -92,6 +97,14 @@ Open to suggestions! Feel free to raise issues or make pull requests on [GitHub]
 ## Questions or Feedback? 🤔
 
 If you have any questions or want to provide feedback, you can reach out to me in the [wh0o7 heaven chat](https://t.me/+D-T_xElzA003Nzcy). Let's make the project even better together! 🎵🎉
+
+## Used Libraries 📚
+
+- [Telegram](https://github.com/wiz0u/WTelegramClient) — client for working with Telegram API
+- [Spotify](https://github.com/JohnnyCrazy/SpotifyAPI-NET) — library for Spotify integration
+- [Yandex Music](https://github.com/K1llMan/Yandex.Music.Api) — Yandex Music API
+- [Last FM](https://github.com/avatar29A/Last.fm) — library for Last.fm interaction
+- [Console Logs](https://github.com/litolax/Improved-Console) — improved console logging
 
 ## License 📄
 
