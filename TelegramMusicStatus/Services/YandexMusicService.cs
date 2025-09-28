@@ -17,6 +17,7 @@ public sealed class YandexMusicService : IYandexMusicService
     private readonly YandexMusicApi _api;
     private readonly YnisonPlayer _player;
     private readonly AuthStorage _storage;
+    private YandexMusicState? _state = null;
 
     public YandexMusicService(IConfig<MainConfig> config)
     {
@@ -40,10 +41,13 @@ public sealed class YandexMusicService : IYandexMusicService
         try
         {
             var status = this._player.State.PlayerState?.Status;
-            if (status == null || status.Paused) return (false, null);
-
             var track = this._player.Current;
             var bio = $"{track.Title} - {string.Join(", ", track.Artists.Select(a => a.Name))}";
+            var now = DateTime.UtcNow;
+
+            if (status == null || (status.Paused && this._state is not null && this._state.Id == track.Id && now > this._state.EstimatedFinish)) return (false, null);
+            if (this._state is not null && this._state.Id == track.Id && now > this._state.FirstSeen && now < this._state.EstimatedFinish) return (true, bio);
+            this._state = new YandexMusicState(status.Paused, track.Id, now, now.AddMilliseconds(track.DurationMs));
 
             return (true, bio);
         }
@@ -53,4 +57,6 @@ public sealed class YandexMusicService : IYandexMusicService
             return (false, null);
         }
     }
+
+    private record YandexMusicState(bool IsPaused, string Id, DateTime FirstSeen, DateTime EstimatedFinish);
 }
