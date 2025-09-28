@@ -10,29 +10,32 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
-      - name: Setup .NET Core SDK
-        uses: actions/setup-dotnet@v3.0.3
+      - name: Setup .NET SDK 8
+        uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: 8.x
+          dotnet-version: 8.0.x
 
-      - name: Build TokenGetter Ubuntu
-        run: dotnet publish SpotifyBearerTokenGetter -c Release -r ubuntu.22.04-x64 -p:PublishSingleFile=true --self-contained true --output TelegramStatus/Publish/ubuntu.22.04-x64/Main
+      - name: Show dotnet info
+        run: dotnet --info
 
-      - name: Build Telegram Music Status Ubuntu
-        run: dotnet publish TelegramMusicStatus -c Release -r ubuntu.22.04-x64 -p:PublishSingleFile=true --self-contained true --output TelegramStatus/Publish/ubuntu.22.04-x64/Main/App
+      - name: Build TokenGetter Linux
+        run: dotnet publish SpotifyBearerTokenGetter -c Release -r linux-x64 -p:PublishSingleFile=true --self-contained true --output TelegramStatus/Publish/linux-x64/Main
 
-      - name: Archive files ubuntu
+      - name: Build Telegram Music Status Linux
+        run: dotnet publish TelegramMusicStatus -c Release -r linux-x64 -p:PublishSingleFile=true --self-contained true --output TelegramStatus/Publish/linux-x64/Main/App
+
+      - name: Archive files linux
         run: |
-          cd TelegramStatus/Publish/ubuntu.22.04-x64
-          zip -r ubuntu.22.04-x64.zip *
+          cd TelegramStatus/Publish/linux-x64
+          zip -r linux-x64.zip *
 
       - name: Build TokenGetter Windows
         run: dotnet publish SpotifyBearerTokenGetter -c Release -r win-x64 -p:PublishSingleFile=true --output TelegramStatus/Publish/win-x64/Main --self-contained false
 
       - name: Build Telegram Music Status Windows
-        run: dotnet publish TelegramMusicStatus -c Release -r win-x64 -p:PublishSingleFile=true --output TelegramStatus/Publish/win-x64/Main/App --self-contained false 
+        run: dotnet publish TelegramMusicStatus -c Release -r win-x64 -p:PublishSingleFile=true --output TelegramStatus/Publish/win-x64/Main/App --self-contained false
 
       - name: Archive files windows
         run: |
@@ -40,43 +43,42 @@ jobs:
           zip -r win-x64.zip *
 
       - name: Create Release and Upload Assets
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
-          release_name: Release
+          name: Release
           files: |
-            TelegramStatus/Publish/ubuntu.22.04-x64/ubuntu.22.04-x64.zip
+            TelegramStatus/Publish/linux-x64/linux-x64.zip
             TelegramStatus/Publish/win-x64/win-x64.zip
           generate_release_notes: true
-  
+
   deploy:
     needs: build-and-publish
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
+        uses: docker/setup-buildx-action@v3
 
       - name: Login to Docker Hub
-        uses: docker/login-action@v1
+        uses: docker/login-action@v3
         with:
           registry: docker.io
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Build and Push Latest Docker Image
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v5
         with:
           context: .
           push: true
           tags: docker.io/${{ secrets.DOCKER_USERNAME }}/telegrammusicstatus:latest
-  
+
   remove-old-artifacts:
     needs: build-and-publish
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    
     steps:
       - name: Remove old artifacts
         uses: c-hive/gha-remove-artifacts@v1
