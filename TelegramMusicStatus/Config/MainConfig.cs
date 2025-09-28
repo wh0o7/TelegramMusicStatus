@@ -30,4 +30,4 @@ public record SpotifyApp(string ClientId, string ClientSecret);
 public record Settings(bool IsDeployed, bool IsDefaultBioOnPause, int Interval, int WaitInterval);
 public record AIMPWebSocket(string Ip, int Port);
 public record LastFm(string ApiKey, string Username);
-public record YandexMusic(string Token, string DeviceId);
+public record YandexMusic(string Token);

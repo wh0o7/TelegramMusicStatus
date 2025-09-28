@@ -23,7 +23,7 @@ public sealed class YandexMusicService : IYandexMusicService
         var ym = config.Entries.YandexMusicAccount;
 
         if (ym is null) return;
-        this._storage = new AuthStorage { DeviceId = ym.DeviceId };
+        this._storage = new AuthStorage { DeviceId = Guid.NewGuid().ToString() };
 
         this._api = new YandexMusicApi();
         this._api.User.Authorize(this._storage, ym.Token);
