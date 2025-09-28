@@ -15,7 +15,7 @@ jobs:
       - name: Setup .NET Core SDK
         uses: actions/setup-dotnet@v3.0.3
         with:
-          dotnet-version: 6.x
+          dotnet-version: 8.x
 
       - name: Build TokenGetter Ubuntu
         run: dotnet publish SpotifyBearerTokenGetter -c Release -r ubuntu.22.04-x64 -p:PublishSingleFile=true --self-contained true --output TelegramStatus/Publish/ubuntu.22.04-x64/Main
