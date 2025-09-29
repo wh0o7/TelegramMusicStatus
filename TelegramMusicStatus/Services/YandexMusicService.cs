@@ -15,7 +15,7 @@ public interface IYandexMusicService : IMusicService
 public sealed class YandexMusicService : IYandexMusicService
 {
     private readonly YandexMusicApi _api;
-    private readonly YnisonPlayer _player;
+    private YnisonPlayer _player;
     private readonly AuthStorage _storage;
     private YandexMusicState? _state = null;
 
@@ -29,11 +29,24 @@ public sealed class YandexMusicService : IYandexMusicService
         this._api = new YandexMusicApi();
         this._api.User.Authorize(this._storage, ym.Token);
 
+
+        this.GetPlayer();
+        
+        Utils.WriteLine("Yandex Music client started!");
+    }
+    
+    private void GetPlayer()
+    {
+        Utils.WriteLine($"Getting player...\n Current Yandex user is {this._api.User.GetLoginInfo(this._storage).Login}");
         this._player = this._api.Ynison.GetPlayer(this._storage);
         this._player.Connect();
         Thread.Sleep(5000);
+        this._player.OnClose += PlayerOnOnClose;
+    }
 
-        Utils.WriteLine("Yandex Music client started!");
+    private void PlayerOnOnClose(YnisonPlayer player, YnisonPlayer.CloseEventArgs args)
+    {
+        this.GetPlayer();
     }
 
     public async Task<(bool IsPlaying, string? Bio)> GetCurrentlyPlayingStatus()
