@@ -29,7 +29,7 @@ public sealed class YandexMusicService : IYandexMusicService
     private void GetPlayer()
     {
         if (this._player is not null) this._player.Dispose();
-        var ym = new Config<YandexMusic?>().Entries;
+        var ym = new Config<MainConfig>().Entries.YandexMusicAccount;
 
         if (ym is null) return;
         this._storage = new AuthStorage { DeviceId = Guid.NewGuid().ToString() };
