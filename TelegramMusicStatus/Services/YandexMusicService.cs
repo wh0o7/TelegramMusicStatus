@@ -59,7 +59,7 @@ public sealed class YandexMusicService : IYandexMusicService
                 Console.WriteLine($"(Yandex Music)   Smth null: \n 1. userAuth is {(userAuth is null ? string.Empty : "not")} null.\n2. player is {(this._player is null ? string.Empty : "not")} null  \n\n\n");
                 this.GetPlayer();
             }
-            
+
             if (this._player is null)
             {
                 Console.WriteLine("(Yandex Music)  PLAYER IS NULL 2-ND TIME IN A ROW!!!!!!!!!");
@@ -67,11 +67,23 @@ public sealed class YandexMusicService : IYandexMusicService
             }
 
             var status = this._player.State.PlayerState?.Status;
+            if (status is null)
+            {
+                this.GetPlayer();
+            }
+
+            status = this._player.State.PlayerState?.Status;
             var track = this._player.Current;
             var bio = $"{track.Title} - {string.Join(", ", track.Artists.Select(a => a.Name))}";
             var now = DateTime.UtcNow;
 
-            if (status == null || (status.Paused && this._state is not null && this._state.Id == track.Id && now > this._state.EstimatedFinish)) return (false, null);
+            if (status is null || status.Paused && this._state is not null && this._state.Id == track.Id && now > this._state.EstimatedFinish)
+            {
+                this.GetPlayer();
+                Console.WriteLine("(Yandex Music)  STATUS IS NULL 2-ND TIME IN A ROW!!!!!!!!!" + $"(Yandex Music) [STATE]:{this._state?.ToJson() ?? "null"}\n (Yandex Music) [TIME_NOW]:{now}\n(Yandex Music) [PLAYER_STATE]:{this._player.State.PlayerState?.Status.ToJson()}");
+                return (false, null);
+            }
+
             if (this._state is not null && this._state.Id == track.Id && now > this._state.FirstSeen && now < this._state.EstimatedFinish) return (true, bio);
             this._state = new YandexMusicState(status.Paused, track.Id, now, now.AddMilliseconds(track.DurationMs));
 
