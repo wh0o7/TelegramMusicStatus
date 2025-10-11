@@ -92,6 +92,7 @@ public sealed class YandexMusicService : IYandexMusicService
         catch (Exception ex)
         {
             Utils.WriteLine("Ynison boom\n" + ex.ToJson());
+            this.GetPlayer();
             return (false, null);
         }
     }
