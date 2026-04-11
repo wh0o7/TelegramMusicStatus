@@ -4,9 +4,9 @@ public class TrackInfoMessage
 {
     public TrackInfoMessage(string trackTitle, string artist, bool isPlaying)
     {
-        TrackTitle = trackTitle;
-        Artist = artist;
-        IsPlaying = isPlaying;
+        this.TrackTitle = trackTitle;
+        this.Artist = artist;
+        this.IsPlaying = isPlaying;
     }
 
     public string TrackTitle { get; set; }
@@ -15,8 +15,8 @@ public class TrackInfoMessage
 
     public void Deconstruct(out string trackTitle, out string artist, out bool isPlaying)
     {
-        trackTitle = TrackTitle;
-        artist = Artist;
-        isPlaying = IsPlaying;
+        trackTitle = this.TrackTitle;
+        artist = this.Artist;
+        isPlaying = this.IsPlaying;
     }
 }

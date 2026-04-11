@@ -1,4 +1,4 @@
-﻿using TelegramMusicStatus.Config;
+using TelegramMusicStatus.Config;
 
 namespace TelegramMusicStatus.Services;
 
@@ -19,7 +19,8 @@ public class TasksService : ITasksService
     private readonly IYandexMusicService? _yandexMusicService;
     private readonly string? _playingIndicator;
 
-    public TasksService(ITelegramStatusService telegramService, IConfig<MainConfig> config, IYandexMusicService? yandexMusicService = null, ILastFmService? lastFmService = null, IAIMPMusicService? aimpService = null, ISpotifyMusicService? spotifyService = null)
+    public TasksService(ITelegramStatusService telegramService, IConfig<MainConfig> config, IYandexMusicService? yandexMusicService = null, ILastFmService? lastFmService = null,
+        IAIMPMusicService? aimpService = null, ISpotifyMusicService? spotifyService = null)
     {
         this._telegramService = telegramService;
         this._yandexMusicService = yandexMusicService;

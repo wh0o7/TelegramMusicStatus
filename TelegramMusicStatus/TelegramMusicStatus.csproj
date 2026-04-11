@@ -2,7 +2,7 @@
 
     <PropertyGroup>
         <OutputType>Exe</OutputType>
-        <TargetFramework>net8.0</TargetFramework>
+        <TargetFramework>net10.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <LangVersion>latestmajor</LangVersion>
@@ -13,17 +13,21 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Hqub.Last.fm" Version="2.1.0" />
+        <PackageReference Include="Hqub.Last.fm" Version="2.5.1" />
         <PackageReference Include="ImprovedСonsole" Version="1.1.6" />
-        <PackageReference Include="KM.Yandex.Music.Api" Version="2.0.3" />
-        <PackageReference Include="KM.Yandex.Music.Client" Version="2.0.3" />
-        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0-preview.6.23329.7" />
-        <PackageReference Include="SpotifyAPI.Web" Version="7.0.0" />
-        <PackageReference Include="SpotifyAPI.Web.Auth" Version="7.0.0" />
-        <PackageReference Include="WebSocketSharp" Version="1.0.3-rc11" />
-        <PackageReference Include="WTelegramClient" Version="3.5.6" />
+        <PackageReference Include="KM.Yandex.Music.Api" Version="2.0.6" />
+        <PackageReference Include="KM.Yandex.Music.Client" Version="2.0.6" />
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.5" />
+        <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+        <PackageReference Include="SpotifyAPI.Web" Version="7.4.2" />
+        <PackageReference Include="SpotifyAPI.Web.Auth" Version="7.4.2" />
+        <PackageReference Include="WebSocketSharp-netstandard" Version="1.0.1" />
+        <PackageReference Include="WTelegramClient" Version="4.4.3" />
     </ItemGroup>
 
-
+    <ItemGroup>
+      <Content Remove="..\..\..\..\..\Users\andru\.nuget\packages\km.yandex.music.api\2.0.6\contentFiles\any\net8.0\README.md" />
+      <Content Remove="..\..\..\..\..\Users\andru\.nuget\packages\km.yandex.music.client\2.0.6\contentFiles\any\net8.0\README.md" />
+    </ItemGroup>
 
 </Project>

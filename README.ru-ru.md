@@ -4,15 +4,19 @@
 
 ## Обзор 🎶
 
-TelegramMusicStatus - это проект, задачей которого является держать в курсе ваших друзей ваши музыкальные предпочтения. Он обновляет ваш статус в Telegram текущим воспроизводимым треком из Spotify или аудиоплеера AIMP. Независимо от того, танцуете вы под музыку или наслаждаетесь подкастом, ваш статус в Telegram будет отражать ваше музыкальное настроение. Даже во время паузы в воспроизведении музыки ваш статус будет свежим и захватывающим.
+TelegramMusicStatus синхронизирует **описание профиля (bio)** в Telegram с тем, что вы сейчас слушаете. Поддерживаются **Spotify**, **AIMP** (WebSocket + плагин), **Last.fm** и **Яндекс Музыка**. В паузе можно использовать запасные bio и реже опрашивать источники (режим ожидания).
+
+**Требования:** [.NET 10 SDK](https://dotnet.microsoft.com/download). Версия SDK зафиксирована в [`global.json`](global.json).
 
 ## Установка 🚀
 
-1. Начните с настройки плагина. Создайте файл `config.json` в директории проекта, используя пример ниже.
+1. Создайте `config.json` рядом с исполняемым файлом (см. пример). Неиспользуемые секции можно не указывать.
 
-2. Запустите приложение. В зависимости от настроек, оно будет подключаться к Spotify, AIMP WebSocket или обоими.
+2. Запустите приложение (`dotnet run` в каталоге `TelegramMusicStatus` или собранный билд). Подключаются только настроенные источники.
 
 ## Пример настройки 🎛️
+
+Имена полей — **PascalCase** (`System.Text.Json`). Необязательные объекты можно опустить.
 
 ```json
 {
@@ -22,21 +26,28 @@ TelegramMusicStatus - это проект, задачей которого яв�
   },
   "SpotifyAccount": {
     "BearerToken": "your_spotify_bearer_token",
-    "Response": {
-      // ...
-    }
+    "Response": null
   },
   "TelegramAccount": {
     "ApiId": "your_api_id",
     "ApiHash": "your_api_hash",
     "PhoneNumber": "your_phone_number",
-    "MFAPassword": "your_mfa_password"
+    "MfaPassword": "your_cloud_password_if_2fa",
+    "Socks5": {
+      "Host": "127.0.0.1",
+      "Port": 1080,
+      "Username": null,
+      "Password": null
+    }
   },
   "Settings": {
     "IsDeployed": true,
     "IsDefaultBioOnPause": false,
-    "Interval": 45
+    "Interval": 45,
+    "WaitInterval": 90
   },
+  "UserBio": ["Запасной текст 1", "Запасной текст 2"],
+  "PlayingIndicator": "🎵 ",
   "LastFmApi": {
     "ApiKey": "LASTFM_API_KEY",
     "Username": "LASTFM_USERNAME"
@@ -51,40 +62,45 @@ TelegramMusicStatus - это проект, задачей которого яв�
 }
 ```
 
-- `SpotifyApp` 😎: Содержит учетные данные вашего приложения Spotify. Это важно для SpotifyBearerTokenGetter. Если файл `config.json` и геттер находятся в одной директории, автоматически заполняются. В противном случае, укажите путь. Если конфиг отсутствует, не беда - введите значения вручную, и конфиг самостоятельно заполнится (Spotify app и SpotifyAccount).
+- `SpotifyApp` 😎: учётные данные приложения Spotify (для **SpotifyBearerTokenGetter**). Основное приложение всё равно ожидает этот блок в `config.json`; при отказе от Spotify можно указать заглушки.
 
-- `SpotifyAccount` 🎵: Содержит токен доступа Spotify и другие ответы.
+- `SpotifyAccount` 🎵: bearer-токен и при необходимости OAuth `Response`; для режима только токена — `"Response": null`.
 
-- `TelegramAccount` 💬: Хранит ваши учетные данные для Telegram API.
+- `TelegramAccount` 💬: `ApiId`, `ApiHash`, телефон; `MfaPassword` — облачный пароль при 2FA. `Socks5` — необязательный прокси для MTProto.
 
-- `Settings` ⚙️: Настройте поведение приложения, интервал(мин 10с, макс 300с,по умолчанию 30с) и обновление био.
+- `Settings` ⚙️: `Interval` — интервал опроса в секундах (10–300). `WaitInterval` — интервал в режиме ожидания, когда ничего не играет (20–600). `IsDeployed` / `IsDefaultBioOnPause` — запрос при паузе и сброс bio из `UserBio`.
 
-- `AimpWebSocket` 🎧: Установите настройки AIMP WebSocket.
+- `UserBio` / `PlayingIndicator`: необязательные запасные bio и префикс строки трека.
 
-- `LastFmApi` 🎵: Содержит токен для Last FM и ваш username.
+- `AimpWebSocket` 🎧: хост/порт WebSocket-сервера, который поднимает **это** приложение; к нему подключается плагин AIMP.
 
-- `YandexMusicAccount` 🎵: Содержит Yandex bearer токен.
+- `LastFmApi` / `YandexMusicAccount`: по желанию.
 
 ## Регистрация Spotify Application 🎶
 
 Чтобы использовать интеграцию с Spotify, создайте приложение на [Spotify Developer Dashboard](https://developer.spotify.com/dashboard/applications). Получите Client ID и Client Secret для настройки `SpotifyApp`.
 
+## Регистрация Last.fm 🎵
+
+Создайте API-ключ на [last.fm/api/account/create](https://www.last.fm/api/account/create) и укажите `ApiKey` и `Username` в `LastFmApi`.
+
 ## Регистрация Telegram Application 💬
 
-Для работы с Telegram, создайте приложение на [Telegram API website](https://my.telegram.org/auth). Вы получите `ApiId` и `ApiHash`, необходимые для раздела `TelegramAccount`.
+Создайте приложение на [my.telegram.org](https://my.telegram.org/auth) и используйте `ApiId` и `ApiHash` в `TelegramAccount`.
 
 ## Использование 🎉
 
-1. Подготовьте свои учетные данные в файле `config.json`.
+1. Заполните `config.json`.
 
-2. Запустите приложение.
+2. Запустите **TelegramMusicStatus** (при необходимости — **SpotifyBearerTokenGetter** для обновления токена Spotify).
 
-3. Удивитесь, как ваш статус в Telegram обновляется текущей музыкой.
+3. Bio в Telegram обновится по первому источнику с актуальным «сейчас играет».
 
-Для подробной настройки и дополнительной информации посетите репозиторий проекта.
+**AIMP:** установите [CurrentlyPlayingInfoAIMPPlugin](https://github.com/wh0o7/CurrentlyPlayingInfoAIMPPlugin) 😊 и укажите тот же хост/порт, что в `AimpWebSocket`.
 
-**Требования для AIMPWebSocket:**
-Для корректной работы AIMPWebSocket необходимо установить [плагин для AIMP](https://github.com/wh0o7/CurrentlyPlayingInfoAIMPPlugin) 😊. Этот плагин необходим для сбора информации о текущем воспроизводимом треке в AIMP и передачи ее через соединение WebSocket. Пожалуйста, следуйте инструкциям по установке, предоставленным в репозитории плагина, чтобы обеспечить беспроблемную интеграцию между AIMP и AIMPWebSocket.
+## Участие 🤝
+
+Issues и pull request'ы приветствуются: [GitHub](https://github.com/wh0o7/TelegramMusicStatus/issues).
 
 ## Вопросы или обратная связь? 🤔
 
@@ -92,11 +108,11 @@ TelegramMusicStatus - это проект, задачей которого яв�
 
 ## Используемые библиотеки 📚
 
-- [Telegram](https://github.com/wiz0u/WTelegramClient) — клиент для работы с Telegram API
-- [Spotify](https://github.com/JohnnyCrazy/SpotifyAPI-NET) — библиотека для интеграции со Spotify
-- [Yandex Music](https://github.com/K1llMan/Yandex.Music.Api) — API для Яндекс Музыки
-- [Last FM](https://github.com/avatar29A/Last.fm) — библиотека для взаимодействия с Last.fm
-- [Console Logs](https://github.com/litolax/Improved-Console) — улучшенный вывод логов в консоль
+- [WTelegramClient](https://github.com/wiz0u/WTelegramClient) — клиент Telegram MTProto
+- [SpotifyAPI-NET](https://github.com/JohnnyCrazy/SpotifyAPI-NET) — Spotify Web API
+- [Yandex.Music.Api](https://github.com/K1llMan/Yandex.Music.Api) — API Яндекс Музыки
+- [Last.fm](https://github.com/avatar29A/Last.fm) — клиент Last.fm
+- [Improved Console](https://github.com/litolax/Improved-Console) — вывод в консоль
 
 ## Лицензия 📄
 

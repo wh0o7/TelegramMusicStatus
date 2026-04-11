@@ -1,4 +1,4 @@
-﻿using Swan;
+using Swan;
 using TelegramMusicStatus.Config;
 using TelegramMusicStatus.Models;
 using Yandex.Music.Api;
@@ -7,69 +7,96 @@ using Yandex.Music.Api.Common.Ynison;
 
 namespace TelegramMusicStatus.Services;
 
-public interface IYandexMusicService : IMusicService
-{
-    new Task<(bool IsPlaying, string? Bio)> GetCurrentlyPlayingStatus();
-}
+public interface IYandexMusicService : IMusicService;
 
 public sealed class YandexMusicService : IYandexMusicService
 {
-    private YandexMusicApi _api;
-    private YnisonPlayer? _player = null;
-    private AuthStorage _storage;
+    private readonly IConfig<MainConfig> _config;
+    private readonly SemaphoreSlim _connectLock = new(1, 1);
+
+    private YandexMusicApi? _api;
+    private YnisonPlayer? _player;
+    private AuthStorage? _storage;
     private YandexMusicState? _state;
 
-    public YandexMusicService()
+    public YandexMusicService(IConfig<MainConfig> config)
     {
-        this.GetPlayer();
-
+        this._config = config;
         Utils.WriteLine("Yandex Music client started!");
     }
 
-    private void GetPlayer()
+    private async Task EnsurePlayerAsync()
     {
-        if (this._player is not null) this._player.Dispose();
-        var ym = new Config<MainConfig>().Entries.YandexMusicAccount;
+        await this._connectLock.WaitAsync().ConfigureAwait(false);
+        try
+        {
+            this._player?.Dispose();
+            this._player = null;
 
-        if (ym is null) return;
-        this._storage = new AuthStorage { DeviceId = Guid.NewGuid().ToString() };
+            var ym = this._config.Entries.YandexMusicAccount;
+            if (ym is null) return;
 
-        this._api = new YandexMusicApi();
-        this._api.User.Authorize(this._storage, ym.Token);
+            this._storage = new AuthStorage { DeviceId = Guid.NewGuid().ToString() };
 
-        Utils.WriteLine($"Getting player...\n Current Yandex user is {this._api.User.GetUserAuth(this._storage).Result.Account.Login.ToJson()}");
-        this._player = this._api.Ynison.GetPlayer(this._storage);
-        this._player.Connect();
-        Thread.Sleep(5000);
-        this._player.OnClose += PlayerOnOnClose;
+            this._api = new YandexMusicApi();
+            this._api.User.Authorize(this._storage, ym.Token);
+
+            var auth = await this._api.User.GetUserAuthAsync(this._storage).ConfigureAwait(false);
+            Utils.WriteLine($"Getting player...\n Current Yandex user is {auth.Result.Account.Login.ToJson()}");
+
+            this._player = this._api.Ynison.GetPlayer(this._storage);
+            this._player.Connect();
+            await Task.Delay(5000).ConfigureAwait(false);
+            this._player.OnClose += this.PlayerOnOnClose;
+        }
+        finally
+        {
+            this._connectLock.Release();
+        }
     }
 
     private void PlayerOnOnClose(YnisonPlayer player, YnisonPlayer.CloseEventArgs args)
     {
-        this.GetPlayer();
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await this.EnsurePlayerAsync().ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                Utils.WriteLine($"Yandex Music reconnect error: {ex.Message}");
+            }
+        });
     }
 
     public async Task<(bool IsPlaying, string? Bio)> GetCurrentlyPlayingStatus()
     {
         try
         {
-            var userAuth = (await this._api.User.GetUserAuthAsync(this._storage)).Result.Account;
-            if (userAuth is null || this._player == null)
+            if (this._api is null || this._storage is null)
+                await this.EnsurePlayerAsync().ConfigureAwait(false);
+            if (this._api is null || this._storage is null)
+                return (false, null);
+
+            var userAuth = (await this._api.User.GetUserAuthAsync(this._storage).ConfigureAwait(false)).Result.Account;
+            if (userAuth is null || this._player is null)
             {
-                Console.WriteLine($"(Yandex Music)   Smth null: \n 1. userAuth is {(userAuth is null ? string.Empty : "not")} null.\n2. player is {(this._player is null ? string.Empty : "not")} null  \n\n\n");
-                this.GetPlayer();
+                Utils.WriteLine(
+                    $"(Yandex Music)   Something null: userAuth is {(userAuth is null ? "null" : "not null")}, player is {(this._player is null ? "null" : "not null")}");
+                await this.EnsurePlayerAsync().ConfigureAwait(false);
             }
 
             if (this._player is null)
             {
-                Console.WriteLine("(Yandex Music)  PLAYER IS NULL 2-ND TIME IN A ROW!!!!!!!!!");
+                Utils.WriteLine("(Yandex Music)  PLAYER IS NULL 2-ND TIME IN A ROW!");
                 return (false, null);
             }
 
             var status = this._player.State.PlayerState?.Status;
             if (status is null)
             {
-                this.GetPlayer();
+                await this.EnsurePlayerAsync().ConfigureAwait(false);
             }
 
             status = this._player.State.PlayerState?.Status;
@@ -79,8 +106,9 @@ public sealed class YandexMusicService : IYandexMusicService
 
             if (status is null || status.Paused && this._state is not null && this._state.Id == track.Id && now > this._state.EstimatedFinish)
             {
-                this.GetPlayer();
-                Console.WriteLine("(Yandex Music)  STATUS IS NULL 2-ND TIME IN A ROW!!!!!!!!!" + $"(Yandex Music) [STATE]:{this._state?.ToJson() ?? "null"}\n (Yandex Music) [TIME_NOW]:{now}\n(Yandex Music) [PLAYER_STATE]:{this._player.State.PlayerState?.Status.ToJson()}");
+                await this.EnsurePlayerAsync().ConfigureAwait(false);
+                Utils.WriteLine("(Yandex Music)  STATUS IS NULL 2-ND TIME IN A ROW! " +
+                                $"[STATE]:{this._state?.ToJson() ?? "null"} [TIME_NOW]:{now} [PLAYER_STATE]:{this._player.State.PlayerState?.Status.ToJson()}");
                 return (false, null);
             }
 
@@ -91,8 +119,16 @@ public sealed class YandexMusicService : IYandexMusicService
         }
         catch (Exception ex)
         {
-            Utils.WriteLine("Ynison boom\n" + ex.ToJson());
-            this.GetPlayer();
+            Utils.WriteLine($"Yandex Music error: {ex.Message}");
+            try
+            {
+                await this.EnsurePlayerAsync().ConfigureAwait(false);
+            }
+            catch (Exception reconnectEx)
+            {
+                Utils.WriteLine($"Yandex Music reconnect after error failed: {reconnectEx.Message}");
+            }
+
             return (false, null);
         }
     }

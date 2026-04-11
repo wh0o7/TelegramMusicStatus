@@ -17,11 +17,7 @@ public record MainConfig(
 );
 
 public record SpotifyApp(string ClientId, string ClientSecret);
-
 public record Spotify(string BearerToken, AuthorizationCodeTokenResponse Response);
-
 public record Telegram(string ApiId, string ApiHash, string PhoneNumber, string MFAPassword);
-
 public record Settings(bool IsDeployed, bool IsDefaultBioOnPause, int Interval);
-
 public record AIMPWebSocket(string Ip, int Port);

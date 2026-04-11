@@ -1,4 +1,4 @@
-﻿using System.Text.Json.Serialization;
+using System.Text.Json.Serialization;
 using SpotifyAPI.Web;
 
 namespace TelegramMusicStatus.Config;
@@ -7,15 +7,15 @@ public record MainConfig(
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     SpotifyApp SpotifyApp,
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    Spotify SpotifyAccount,
+    Spotify? SpotifyAccount,
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     Telegram TelegramAccount,
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     Settings Settings,
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    AIMPWebSocket AimpWebSocket,
+    AIMPWebSocket? AimpWebSocket,
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    LastFm LastFmApi,
+    LastFm? LastFmApi,
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     string?[]? UserBio,
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
@@ -24,7 +24,15 @@ public record MainConfig(
     YandexMusic? YandexMusicAccount
 );
 
-public record Telegram(string ApiId, string ApiHash, string PhoneNumber, string? MfaPassword);
+public record Telegram(
+    string ApiId,
+    string ApiHash,
+    string PhoneNumber,
+    string? MfaPassword,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    TelegramSocks5Proxy? Socks5 = null);
+
+public record TelegramSocks5Proxy(string Host, int Port, string? Username, string? Password);
 public record Spotify(string BearerToken, AuthorizationCodeTokenResponse? Response);
 public record SpotifyApp(string ClientId, string ClientSecret);
 public record Settings(bool IsDeployed, bool IsDefaultBioOnPause, int Interval, int WaitInterval);

@@ -74,7 +74,7 @@ internal class Program
         var mainConfig = configService is not null
             ? configService.Entries
             : new MainConfig(new SpotifyApp(ClientId, ClientSecret), null, null, null, null, null);
-        var updatedSpotify = new Spotify(BearerToken: tokenResponse.AccessToken, Response: tokenResponse);
+        var updatedSpotify = new Spotify(tokenResponse.AccessToken, tokenResponse);
         var updatedMainConfig = mainConfig with { SpotifyAccount = updatedSpotify };
 
         Config<MainConfig>.SaveConfig(updatedMainConfig);

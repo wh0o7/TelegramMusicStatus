@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using TelegramMusicStatus.Config;
 using TelegramMusicStatus.Models;
 using WebSocketSharp;
@@ -8,23 +8,23 @@ namespace TelegramMusicStatus.Services;
 
 public interface IAIMPMusicService : IMusicService
 {
-    new Task<(bool IsPlaying, string? Bio)> GetCurrentlyPlayingStatus();
-    Task? Close();
+    Task Close();
 }
 
 public class AIMPMusicService : IAIMPMusicService
 {
-    private WebSocketServer _wssv;
+    private readonly WebSocketServer _wssv;
     private static bool IsPlaying { get; set; }
     private static string? Artist { get; set; }
     private static string? TrackTitle { get; set; }
-    private IConfig<MainConfig> _config;
+    private readonly IConfig<MainConfig> _config;
 
     public AIMPMusicService(IConfig<MainConfig> config)
     {
         this._config = config;
-        this._wssv = new WebSocketServer(
-            $"ws://{this._config.Entries.AimpWebSocket.Ip}:{this._config.Entries.AimpWebSocket.Port}");
+        var ws = this._config.Entries.AimpWebSocket
+                 ?? throw new InvalidOperationException("AimpWebSocket is not configured.");
+        this._wssv = new WebSocketServer($"ws://{ws.Ip}:{ws.Port}");
         this._wssv.AddWebSocketService<ApiService>("/aimp");
         this._wssv.Log.Level = LogLevel.Info;
         this._wssv.Start();
