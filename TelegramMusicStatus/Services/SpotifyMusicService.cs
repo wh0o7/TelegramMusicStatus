@@ -4,31 +4,34 @@ using TelegramMusicStatus.Models;
 
 namespace TelegramMusicStatus.Services;
 
-public interface ISpotifyMusicService : IMusicService
-{
-    new Task<(bool IsPlaying, string? Bio)> GetCurrentlyPlayingStatus();
-}
+public interface ISpotifyMusicService : IMusicService;
 
 public class SpotifyMusicService : ISpotifyMusicService
 {
-    private IConfig<MainConfig> _config;
-    private SpotifyClient _spotifyClient;
+    private readonly IConfig<MainConfig> _config;
+    private readonly SpotifyClient _spotifyClient;
 
     public SpotifyMusicService(IConfig<MainConfig> config)
     {
         this._config = config;
-        if (this._config.Entries.SpotifyAccount.Response is not null)
+        var account = this._config.Entries.SpotifyAccount
+                      ?? throw new InvalidOperationException("Spotify account configuration is missing");
+        if (account.Response is not null)
         {
             var spotifyClientConfig = SpotifyClientConfig
                 .CreateDefault()
-                .WithAuthenticator(new AuthorizationCodeAuthenticator(this._config.Entries.SpotifyApp.ClientId,
-                    this._config.Entries.SpotifyApp.ClientSecret, this._config.Entries.SpotifyAccount.Response));
+                .WithAuthenticator(new AuthorizationCodeAuthenticator(this._config.Entries.SpotifyApp.ClientId, this._config.Entries.SpotifyApp.ClientSecret,
+                    account.Response));
 
             this._spotifyClient = new SpotifyClient(spotifyClientConfig);
         }
+        else if (account.BearerToken is not null)
+        {
+            this._spotifyClient = new SpotifyClient(account.BearerToken);
+        }
         else
         {
-            this._spotifyClient = new SpotifyClient(this._config.Entries.SpotifyAccount.BearerToken);
+            throw new InvalidOperationException("Spotify account configuration is missing");
         }
 
         Utils.WriteLine("Spotify client started!");
@@ -42,8 +45,9 @@ public class SpotifyMusicService : ISpotifyMusicService
         {
             currentlyPlaying = await this._spotifyClient.Player.GetCurrentlyPlaying(request);
         }
-        catch
+        catch (Exception ex)
         {
+            Utils.WriteLine($"Error getting Spotify status: {ex.Message}");
             currentlyPlaying = null;
         }
 

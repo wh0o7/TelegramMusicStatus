@@ -4,15 +4,28 @@
 
 ## Overview 🎶
 
-TelegramMusicStatus is a project designed to keep your friends in the loop about your music preferences. It updates your Telegram status with the currently playing track from Spotify or AIMP audio player and can retrieve info about what is currently playing from LastFm. Whether you're grooving to a tune or enjoying a podcast, your Telegram status will reflect your musical mood. Even during pauses in playback, your status will remain fresh and catchy.
+TelegramMusicStatus updates your **Telegram profile bio** with the track you are playing. It supports **Spotify**, **Last.fm**, and **Yandex Music**. When nothing is playing you can fall back to saved bios and use a slower **wait** polling interval.
+
+**AIMP:** older releases integrated with the AIMP player via a WebSocket plugin ([CurrentlyPlayingInfoAIMPPlugin](https://github.com/wh0o7/CurrentlyPlayingInfoAIMPPlugin) / submodule). That path is **no longer supported** in this repository — use Spotify, Last.fm, or Yandex Music instead.
+
+**Requirements:** [.NET 10 SDK](https://dotnet.microsoft.com/download). SDK version is pinned in [`global.json`](global.json).
 
 ## Installation 🚀
 
-1. Start by configuring the plugin. Create a `config.json` file in the project directory using the example below.
+**Telegram through a proxy:** [WTelegramClient’s EXAMPLES](https://github.com/wiz0u/WTelegramClient/blob/master/EXAMPLES.md#use-a-proxy-or-mtproxy-to-connect-to-telegram) describe two approaches — this app supports both:
 
-2. Run the application. Depending on your setup, it will connect to Spotify, AIMP WebSocket, Last FM or Yandex Music.
+1. **`MTProxyUrl` (simplest)** — set it to a Telegram MTProto proxy URL (`https://t.me/proxy?server=...&port=...&secret=...`). WTelegramClient handles this natively (`Client.MTProxyUrl`).
+2. **`Socks5`** — same as upstream: *“SOCKS/HTTPS proxies can be used through the `client.TcpHandler` delegate and a proxy library like [StarkSoftProxy](https://www.nuget.org/packages/StarkSoftProxy/) or [xNetStandard](https://www.nuget.org/packages/xNetStandard/).”* This project uses **`StarkSoftProxy`** (`Socks5ProxyClient`) and your `Socks5` block in `config.json`.
+
+If both are set, **`MTProxyUrl` takes precedence** and `Socks5` is ignored. Omit both for a direct connection.
+
+1. Create `config.json` next to the executable (see the configuration example below). Add `MTProxyUrl` and/or `Socks5` only if you need a proxy.
+
+2. Run the app (`dotnet run` in `TelegramMusicStatus` or a published build). Only configured sources are used.
 
 ## Configuration Example 🎛️
+
+JSON uses **PascalCase** property names (`System.Text.Json`). Optional objects can be omitted.
 
 ```json
 {
@@ -22,48 +35,50 @@ TelegramMusicStatus is a project designed to keep your friends in the loop about
   },
   "SpotifyAccount": {
     "BearerToken": "your_spotify_bearer_token",
-    "Response": {
-      // ...
-    }
+    "Response": null
   },
   "TelegramAccount": {
     "ApiId": "your_api_id",
     "ApiHash": "your_api_hash",
     "PhoneNumber": "your_phone_number",
-    "MFAPassword": "your_mfa_password"
+    "MfaPassword": "your_cloud_password_if_2fa",
+    "MTProxyUrl": null,
+    "Socks5": {
+      "Host": "127.0.0.1",
+      "Port": 1080,
+      "Username": null,
+      "Password": null
+    }
   },
   "Settings": {
     "IsDeployed": true,
     "IsDefaultBioOnPause": false,
-    "Interval": 45
+    "Interval": 45,
+    "WaitInterval": 90
   },
+  "UserBio": ["Default bio line 1", "Default bio line 2"],
+  "PlayingIndicator": "🎵 ",
   "LastFmApi": {
     "ApiKey": "LASTFM_API_KEY",
     "Username": "LASTFM_USERNAME"
   },
   "YandexMusicAccount": {
     "Token": "YANDEX_TOKEN"
-  },
-  "AimpWebSocket": {
-    "Ip": "127.0.0.1",
-    "Port": 5543
   }
 }
 ```
 
-- `SpotifyApp` 😎: Contains your Spotify application credentials. Essential for SpotifyBearerTokenGetter. If `config.json` and the getter are in the same spot, it gets filled automatically. If not, provide the path. Missing config? No worries – manually input values, and the config completes itself (both Spotify app and SpotifyAccount).
+- `SpotifyApp` 😎: Spotify API app credentials (also for **SpotifyBearerTokenGetter**). The main app still expects this block; use placeholders if you only use other sources.
 
-- `SpotifyAccount` 🎵: Holds the Spotify bearer token and other responses.
+- `SpotifyAccount` 🎵: Bearer token and/or OAuth `Response`. Use `"Response": null` for token-only mode.
 
-- `TelegramAccount` 💬: Houses your Telegram API credentials.
+- `TelegramAccount` 💬: `ApiId`, `ApiHash`, phone; `MfaPassword` is the Telegram cloud password if 2FA is enabled. Optional: `MTProxyUrl` (MTProto proxy URL) or `Socks5` — see **Installation** above.
 
-- `Settings` ⚙️: Customize app behavior, interval(min 10s, max 300s, default 30s), and bio updates.
+- `Settings` ⚙️: `Interval` — poll interval in seconds (10–300; out-of-range falls back to ~30s). `WaitInterval` — seconds between checks in wait mode when idle (20–600). `IsDeployed` / `IsDefaultBioOnPause` control pause prompts and resetting bio from `UserBio`.
 
-- `AimpWebSocket` 🎧: Set AIMP WebSocket settings.
+- `UserBio` / `PlayingIndicator`: optional default bios and prefix for the track line.
 
-- `LastFmApi` 🎵: Set LastFm api settings.
-
-- `YandexMusicAccount` 🎵: Holds the Yandex bearer token.
+- `LastFmApi` / `YandexMusicAccount`: optional integrations.
 
 ## Spotify Application Registration 🎶
 
@@ -75,20 +90,15 @@ To integrate with Last.fm, you'll need to create an application on the [Last.fm 
 
 ## Telegram Application Registration 💬
 
-For Telegram magic, craft an app on the [Telegram API website](https://my.telegram.org/auth). You'll nab the `ApiId` and `ApiHash` for `TelegramAccount` section.
+Create an app on [my.telegram.org](https://my.telegram.org/auth) and use `ApiId` and `ApiHash` in `TelegramAccount`.
 
 ## Usage 🎉
 
-1. Get your credentials ready in `config.json`.
+1. Fill in `config.json`.
 
-2. Fire up the app.
+2. Run **TelegramMusicStatus** (and **SpotifyBearerTokenGetter** when you need a new Spotify token).
 
-3. Behold your Telegram status updating with your current jam.
-
-For a step-by-step setup and more, head over to the project repository.
-
-**AIMPWebSocket Requirements:**
-For AIMPWebSocket to work properly, you'll need to install the [AIMP plugin](https://github.com/wh0o7/CurrentlyPlayingInfoAIMPPlugin) 😊. This plugin is necessary to capture information about the currently playing track in AIMP and transmit it over the WebSocket connection. Follow the installation instructions provided in the plugin's repository to ensure seamless integration between AIMP and AIMPWebSocket.
+3. Your Telegram bio updates from the first source that reports "now playing".
 
 ## Contributing 🤝
 
@@ -100,11 +110,12 @@ If you have any questions or want to provide feedback, you can reach out to me i
 
 ## Used Libraries 📚
 
-- [Telegram](https://github.com/wiz0u/WTelegramClient) — client for working with Telegram API
-- [Spotify](https://github.com/JohnnyCrazy/SpotifyAPI-NET) — library for Spotify integration
-- [Yandex Music](https://github.com/K1llMan/Yandex.Music.Api) — Yandex Music API
-- [Last FM](https://github.com/avatar29A/Last.fm) — library for Last.fm interaction
-- [Console Logs](https://github.com/litolax/Improved-Console) — improved console logging
+- [WTelegramClient](https://github.com/wiz0u/WTelegramClient) — Telegram MTProto client
+- [StarkSoftProxy](https://www.nuget.org/packages/StarkSoftProxy/) — SOCKS5 via `TcpHandler` when `Socks5` is set
+- [SpotifyAPI-NET](https://github.com/JohnnyCrazy/SpotifyAPI-NET) — Spotify Web API
+- [Yandex.Music.Api](https://github.com/K1llMan/Yandex.Music.Api) — Yandex Music API
+- [Last.fm](https://github.com/avatar29A/Last.fm) — Last.fm client
+- [Improved Console](https://github.com/litolax/Improved-Console) — console logging helpers
 
 ## License 📄
 

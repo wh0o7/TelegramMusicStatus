@@ -4,10 +4,7 @@ using TelegramMusicStatus.Models;
 
 namespace TelegramMusicStatus.Services;
 
-public interface ILastFmService : IMusicService
-{
-    new Task<(bool IsPlaying, string? Bio)> GetCurrentlyPlayingStatus();
-}
+public interface ILastFmService : IMusicService;
 
 public class LastFmService : ILastFmService
 {
@@ -16,17 +13,27 @@ public class LastFmService : ILastFmService
 
     public LastFmService(IConfig<MainConfig> config)
     {
-        this._client = new LastfmClient(config.Entries.LastFmApi.ApiKey);
-        this._username = config.Entries.LastFmApi.Username;
+        var lastFm = config.Entries.LastFmApi
+                     ?? throw new InvalidOperationException("LastFmApi is not configured.");
+        this._client = new LastfmClient(lastFm.ApiKey);
+        this._username = lastFm.Username;
     }
 
     public async Task<(bool IsPlaying, string? Bio)> GetCurrentlyPlayingStatus()
     {
-        var currentlyPlayingPage =
-            await this._client.User.GetRecentTracksAsync(this._username, DateTime.Now.AddMinutes(-5), limit: 1);
-        var currentlyPlaying = currentlyPlayingPage.Items.FirstOrDefault();
-        return currentlyPlaying is null
-            ? (false, null)
-            : (true, $"{currentlyPlaying.Name} - {currentlyPlaying.Artist.Name}");
+        try
+        {
+            var currentlyPlayingPage =
+                await this._client.User.GetRecentTracksAsync(this._username, DateTime.Now.AddMinutes(-5), limit: 1);
+            var currentlyPlaying = currentlyPlayingPage.Items.FirstOrDefault();
+            return currentlyPlaying is null
+                ? (false, null)
+                : (true, $"{currentlyPlaying.Name} - {currentlyPlaying.Artist?.Name ?? ""}");
+        }
+        catch (Exception ex)
+        {
+            Utils.WriteLine($"Error getting LastFM status: {ex.Message}");
+            return (false, null);
+        }
     }
 }
