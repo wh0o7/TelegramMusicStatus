@@ -4,13 +4,22 @@
 
 ## Overview 🎶
 
-TelegramMusicStatus updates your **Telegram profile bio** with the track you are playing. It supports **Spotify**, **AIMP** (WebSocket + plugin), **Last.fm**, and **Yandex Music**. When nothing is playing you can fall back to saved bios and use a slower **wait** polling interval.
+TelegramMusicStatus updates your **Telegram profile bio** with the track you are playing. It supports **Spotify**, **Last.fm**, and **Yandex Music**. When nothing is playing you can fall back to saved bios and use a slower **wait** polling interval.
+
+**AIMP:** older releases integrated with the AIMP player via a WebSocket plugin ([CurrentlyPlayingInfoAIMPPlugin](https://github.com/wh0o7/CurrentlyPlayingInfoAIMPPlugin) / submodule). That path is **no longer supported** in this repository — use Spotify, Last.fm, or Yandex Music instead.
 
 **Requirements:** [.NET 10 SDK](https://dotnet.microsoft.com/download). SDK version is pinned in [`global.json`](global.json).
 
 ## Installation 🚀
 
-1. Create `config.json` next to the executable (see below). Omit sections you do not use.
+**Telegram through a proxy:** [WTelegramClient’s EXAMPLES](https://github.com/wiz0u/WTelegramClient/blob/master/EXAMPLES.md#use-a-proxy-or-mtproxy-to-connect-to-telegram) describe two approaches — this app supports both:
+
+1. **`MTProxyUrl` (simplest)** — set it to a Telegram MTProto proxy URL (`https://t.me/proxy?server=...&port=...&secret=...`). WTelegramClient handles this natively (`Client.MTProxyUrl`).
+2. **`Socks5`** — same as upstream: *“SOCKS/HTTPS proxies can be used through the `client.TcpHandler` delegate and a proxy library like [StarkSoftProxy](https://www.nuget.org/packages/StarkSoftProxy/) or [xNetStandard](https://www.nuget.org/packages/xNetStandard/).”* This project uses **`StarkSoftProxy`** (`Socks5ProxyClient`) and your `Socks5` block in `config.json`.
+
+If both are set, **`MTProxyUrl` takes precedence** and `Socks5` is ignored. Omit both for a direct connection.
+
+1. Create `config.json` next to the executable (see the configuration example below). Add `MTProxyUrl` and/or `Socks5` only if you need a proxy.
 
 2. Run the app (`dotnet run` in `TelegramMusicStatus` or a published build). Only configured sources are used.
 
@@ -33,6 +42,7 @@ JSON uses **PascalCase** property names (`System.Text.Json`). Optional objects c
     "ApiHash": "your_api_hash",
     "PhoneNumber": "your_phone_number",
     "MfaPassword": "your_cloud_password_if_2fa",
+    "MTProxyUrl": null,
     "Socks5": {
       "Host": "127.0.0.1",
       "Port": 1080,
@@ -54,10 +64,6 @@ JSON uses **PascalCase** property names (`System.Text.Json`). Optional objects c
   },
   "YandexMusicAccount": {
     "Token": "YANDEX_TOKEN"
-  },
-  "AimpWebSocket": {
-    "Ip": "127.0.0.1",
-    "Port": 5543
   }
 }
 ```
@@ -66,13 +72,11 @@ JSON uses **PascalCase** property names (`System.Text.Json`). Optional objects c
 
 - `SpotifyAccount` 🎵: Bearer token and/or OAuth `Response`. Use `"Response": null` for token-only mode.
 
-- `TelegramAccount` 💬: `ApiId`, `ApiHash`, phone; `MfaPassword` is the Telegram cloud password if 2FA is enabled. `Socks5` is optional (MTProto via SOCKS5).
+- `TelegramAccount` 💬: `ApiId`, `ApiHash`, phone; `MfaPassword` is the Telegram cloud password if 2FA is enabled. Optional: `MTProxyUrl` (MTProto proxy URL) or `Socks5` — see **Installation** above.
 
 - `Settings` ⚙️: `Interval` — poll interval in seconds (10–300; out-of-range falls back to ~30s). `WaitInterval` — seconds between checks in wait mode when idle (20–600). `IsDeployed` / `IsDefaultBioOnPause` control pause prompts and resetting bio from `UserBio`.
 
 - `UserBio` / `PlayingIndicator`: optional default bios and prefix for the track line.
-
-- `AimpWebSocket` 🎧: Host/port of the WebSocket server **this app** listens on; the AIMP plugin connects here.
 
 - `LastFmApi` / `YandexMusicAccount`: optional integrations.
 
@@ -96,8 +100,6 @@ Create an app on [my.telegram.org](https://my.telegram.org/auth) and use `ApiId`
 
 3. Your Telegram bio updates from the first source that reports "now playing".
 
-**AIMP:** install [CurrentlyPlayingInfoAIMPPlugin](https://github.com/wh0o7/CurrentlyPlayingInfoAIMPPlugin) 😊 and point it at the same host/port as `AimpWebSocket`.
-
 ## Contributing 🤝
 
 Open to suggestions! Feel free to raise issues or make pull requests on [GitHub](https://github.com/wh0o7/TelegramMusicStatus/issues).
@@ -109,6 +111,7 @@ If you have any questions or want to provide feedback, you can reach out to me i
 ## Used Libraries 📚
 
 - [WTelegramClient](https://github.com/wiz0u/WTelegramClient) — Telegram MTProto client
+- [StarkSoftProxy](https://www.nuget.org/packages/StarkSoftProxy/) — SOCKS5 via `TcpHandler` when `Socks5` is set
 - [SpotifyAPI-NET](https://github.com/JohnnyCrazy/SpotifyAPI-NET) — Spotify Web API
 - [Yandex.Music.Api](https://github.com/K1llMan/Yandex.Music.Api) — Yandex Music API
 - [Last.fm](https://github.com/avatar29A/Last.fm) — Last.fm client

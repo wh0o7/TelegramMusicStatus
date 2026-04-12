@@ -4,13 +4,22 @@
 
 ## Обзор 🎶
 
-TelegramMusicStatus синхронизирует **описание профиля (bio)** в Telegram с тем, что вы сейчас слушаете. Поддерживаются **Spotify**, **AIMP** (WebSocket + плагин), **Last.fm** и **Яндекс Музыка**. В паузе можно использовать запасные bio и реже опрашивать источники (режим ожидания).
+TelegramMusicStatus синхронизирует **описание профиля (bio)** в Telegram с тем, что вы сейчас слушаете. Поддерживаются **Spotify**, **Last.fm** и **Яндекс Музыка**. В паузе можно использовать запасные bio и реже опрашивать источники (режим ожидания).
+
+**AIMP:** в старых версиях была интеграция с плеером AIMP через WebSocket-плагин ([CurrentlyPlayingInfoAIMPPlugin](https://github.com/wh0o7/CurrentlyPlayingInfoAIMPPlugin), сабмодуль в репозитории). Сейчас этот путь **снят с поддержки** — используйте Spotify, Last.fm или Яндекс Музыку.
 
 **Требования:** [.NET 10 SDK](https://dotnet.microsoft.com/download). Версия SDK зафиксирована в [`global.json`](global.json).
 
 ## Установка 🚀
 
-1. Создайте `config.json` рядом с исполняемым файлом (см. пример). Неиспользуемые секции можно не указывать.
+**Прокси для Telegram:** в [EXAMPLES WTelegramClient](https://github.com/wiz0u/WTelegramClient/blob/master/EXAMPLES.md#use-a-proxy-or-mtproxy-to-connect-to-telegram) описаны два варианта — здесь поддержаны оба:
+
+1. **`MTProxyUrl` (проще всего)** — URL MTProto-прокси (`https://t.me/proxy?server=...&port=...&secret=...`). Библиотека сама подключается через `Client.MTProxyUrl`.
+2. **`Socks5`** — как в документации WTelegramClient: *«SOCKS/HTTPS proxies can be used through the `client.TcpHandler` delegate and a proxy library like [StarkSoftProxy](https://www.nuget.org/packages/StarkSoftProxy/) or [xNetStandard](https://www.nuget.org/packages/xNetStandard/).»* В проекте подключён **`StarkSoftProxy`** (`Socks5ProxyClient`), настройки — блок `Socks5` в `config.json`.
+
+Если заданы **оба** поля, используется **`MTProxyUrl`**, а `Socks5` игнорируется. Без прокси не указывайте ни одно из них.
+
+1. Создайте `config.json` рядом с исполняемым файлом (пример — в разделе ниже). `MTProxyUrl` и/или `Socks5` — только при необходимости.
 
 2. Запустите приложение (`dotnet run` в каталоге `TelegramMusicStatus` или собранный билд). Подключаются только настроенные источники.
 
@@ -33,6 +42,7 @@ TelegramMusicStatus синхронизирует **описание профил
     "ApiHash": "your_api_hash",
     "PhoneNumber": "your_phone_number",
     "MfaPassword": "your_cloud_password_if_2fa",
+    "MTProxyUrl": null,
     "Socks5": {
       "Host": "127.0.0.1",
       "Port": 1080,
@@ -54,10 +64,6 @@ TelegramMusicStatus синхронизирует **описание профил
   },
   "YandexMusicAccount": {
     "Token": "YANDEX_TOKEN"
-  },
-  "AimpWebSocket": {
-    "Ip": "127.0.0.1",
-    "Port": 5543
   }
 }
 ```
@@ -66,13 +72,11 @@ TelegramMusicStatus синхронизирует **описание профил
 
 - `SpotifyAccount` 🎵: bearer-токен и при необходимости OAuth `Response`; для режима только токена — `"Response": null`.
 
-- `TelegramAccount` 💬: `ApiId`, `ApiHash`, телефон; `MfaPassword` — облачный пароль при 2FA. `Socks5` — необязательный прокси для MTProto.
+- `TelegramAccount` 💬: `ApiId`, `ApiHash`, телефон; `MfaPassword` — облачный пароль при 2FA. Необязательно: `MTProxyUrl` (ссылка MTProto-прокси) или `Socks5` — см. раздел **Установка** выше.
 
 - `Settings` ⚙️: `Interval` — интервал опроса в секундах (10–300). `WaitInterval` — интервал в режиме ожидания, когда ничего не играет (20–600). `IsDeployed` / `IsDefaultBioOnPause` — запрос при паузе и сброс bio из `UserBio`.
 
 - `UserBio` / `PlayingIndicator`: необязательные запасные bio и префикс строки трека.
-
-- `AimpWebSocket` 🎧: хост/порт WebSocket-сервера, который поднимает **это** приложение; к нему подключается плагин AIMP.
 
 - `LastFmApi` / `YandexMusicAccount`: по желанию.
 
@@ -96,8 +100,6 @@ TelegramMusicStatus синхронизирует **описание профил
 
 3. Bio в Telegram обновится по первому источнику с актуальным «сейчас играет».
 
-**AIMP:** установите [CurrentlyPlayingInfoAIMPPlugin](https://github.com/wh0o7/CurrentlyPlayingInfoAIMPPlugin) 😊 и укажите тот же хост/порт, что в `AimpWebSocket`.
-
 ## Участие 🤝
 
 Issues и pull request'ы приветствуются: [GitHub](https://github.com/wh0o7/TelegramMusicStatus/issues).
@@ -109,6 +111,7 @@ Issues и pull request'ы приветствуются: [GitHub](https://github.
 ## Используемые библиотеки 📚
 
 - [WTelegramClient](https://github.com/wiz0u/WTelegramClient) — клиент Telegram MTProto
+- [StarkSoftProxy](https://www.nuget.org/packages/StarkSoftProxy/) — SOCKS5 через `TcpHandler`, если задан `Socks5`
 - [SpotifyAPI-NET](https://github.com/JohnnyCrazy/SpotifyAPI-NET) — Spotify Web API
 - [Yandex.Music.Api](https://github.com/K1llMan/Yandex.Music.Api) — API Яндекс Музыки
 - [Last.fm](https://github.com/avatar29A/Last.fm) — клиент Last.fm

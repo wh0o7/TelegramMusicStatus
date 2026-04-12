@@ -21,7 +21,7 @@
         <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
         <PackageReference Include="SpotifyAPI.Web" Version="7.4.2" />
         <PackageReference Include="SpotifyAPI.Web.Auth" Version="7.4.2" />
-        <PackageReference Include="WebSocketSharp-netstandard" Version="1.0.1" />
+        <PackageReference Include="StarkSoftProxy" Version="1.6.0" />
         <PackageReference Include="WTelegramClient" Version="4.4.3" />
     </ItemGroup>
 

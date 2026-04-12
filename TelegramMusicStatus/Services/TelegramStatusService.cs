@@ -34,17 +34,17 @@ public class TelegramStatusService : ITelegramStatusService
         this._playingIndicator = config.Entries.PlayingIndicator;
         this._userDefaultBioList = this._config.Entries.UserBio?.Where(bio => !string.IsNullOrEmpty(bio)).OfType<string>().ToList() ?? [];
         this._telegramClient = new Client(this.TelegramConfig);
-        var socks = this._config.Entries.TelegramAccount.Socks5;
-        if (socks is not null)
+        var account = this._config.Entries.TelegramAccount;
+        if (!string.IsNullOrWhiteSpace(account.MTProxyUrl))
         {
-            this._telegramClient.TcpHandler = (host, port) => Task.FromResult(Socks5TcpFactory.CreateConnectedClient(
-                host,
-                port,
-                socks.Host,
-                socks.Port,
-                socks.Username,
-                socks.Password));
-            Utils.WriteLine($"Telegram MTProto will use SOCKS5 {socks.Host}:{socks.Port}");
+            this._telegramClient.MTProxyUrl = account.MTProxyUrl.Trim();
+            Utils.WriteLine("Telegram will use MTProxy (WTelegramClient MTProxyUrl).");
+        }
+        else
+        {
+            WTelegramSocks5.ApplyIfConfigured(this._telegramClient, account.Socks5);
+            if (account.Socks5 is not null)
+                Utils.WriteLine($"Telegram MTProto will use SOCKS5 {account.Socks5.Host}:{account.Socks5.Port}");
         }
 
         this._reloginTimer = new Timer(TimeSpan.FromHours(4).TotalMilliseconds);
@@ -106,7 +106,7 @@ public class TelegramStatusService : ITelegramStatusService
         }
         catch (RpcException ex) when (ex.Code == 420)
         {
-            var waitSeconds = ExtractWaitTime(ex);
+            var waitSeconds = this.ExtractWaitTime(ex);
             lock (this._authLock)
             {
                 this._authBlockedUntil = DateTime.UtcNow.AddSeconds(waitSeconds);
@@ -142,7 +142,7 @@ public class TelegramStatusService : ITelegramStatusService
         }
     }
 
-    private static int ExtractWaitTime(RpcException ex)
+    private int ExtractWaitTime(RpcException ex)
     {
         var message = ex.Message ?? string.Empty;
         if (int.TryParse(message.Replace("FLOOD_WAIT_", "").Split(' ').FirstOrDefault(), out var seconds))
@@ -162,7 +162,7 @@ public class TelegramStatusService : ITelegramStatusService
         }
         catch (RpcException ex) when (ex.Code == 420)
         {
-            var waitSeconds = ExtractWaitTime(ex);
+            var waitSeconds = this.ExtractWaitTime(ex);
             lock (this._authLock)
             {
                 this._authBlockedUntil = DateTime.UtcNow.AddSeconds(waitSeconds);
