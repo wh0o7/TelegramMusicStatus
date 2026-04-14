@@ -32,7 +32,7 @@ public record Telegram(
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     TelegramSocks5Proxy? Socks5 = null);
 
-public record TelegramSocks5Proxy(string Host, int Port, string? Username, string? Password);
+public record TelegramSocks5Proxy(string Host, int Port, string? User, string? Password);
 public record Spotify(string BearerToken, AuthorizationCodeTokenResponse? Response);
 public record SpotifyApp(string ClientId, string ClientSecret);
 public record Settings(bool IsDeployed, bool IsDefaultBioOnPause, int Interval, int WaitInterval);

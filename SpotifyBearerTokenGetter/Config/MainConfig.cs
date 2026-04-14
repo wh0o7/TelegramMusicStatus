@@ -8,7 +8,7 @@ public record MainConfig(
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] Spotify? SpotifyAccount,
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] Telegram? TelegramAccount,
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] Settings? Settings,
-    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] string? UserBio);
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] string?[]? UserBio);
 
 public record SpotifyApp(string ClientId, string ClientSecret);
 public record Spotify(string BearerToken, AuthorizationCodeTokenResponse Response);

@@ -46,7 +46,7 @@ internal sealed class SpotifyTokenGetterApp
         }
 
         this._port = 5543;
-        this._uri = new Uri($"http://localhost:{this._port}/callback");
+        this._uri = new Uri($"http://127.0.0.1:{this._port}/callback");
         this._server = new EmbedIOAuthServer(this._uri, this._port);
         await this._server.Start();
 
