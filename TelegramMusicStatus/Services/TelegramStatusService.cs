@@ -114,6 +114,14 @@ public class TelegramStatusService : ITelegramStatusService
             Utils.WriteLine($"FLOOD_WAIT: Blocked for {waitSeconds} seconds ({waitSeconds / 60.0:F1} minutes). Will retry after {this._authBlockedUntil:yyyy-MM-dd HH:mm:ss} UTC");
             return false;
         }
+        catch (RpcException ex) when (ex.Code == 401 && !reloginOnFailedResume &&
+                                       (ex.Message.Contains("AUTH_KEY_UNREGISTERED") ||
+                                        ex.Message.Contains("SESSION_EXPIRED") ||
+                                        ex.Message.Contains("AUTH_KEY_INVALID")))
+        {
+            Utils.WriteLine($"Session expired ({ex.Message}). Attempting full re-login...");
+            return await this.EnsureAuthenticated(reloginOnFailedResume: true);
+        }
         catch (RpcException ex)
         {
             lock (this._authLock)

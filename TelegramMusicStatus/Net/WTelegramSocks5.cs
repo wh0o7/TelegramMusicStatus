@@ -10,13 +10,13 @@ internal static class WTelegramSocks5
     {
         if (socks is null) return;
 
-        client.TcpHandler = (host, port) =>
+        client.TcpHandler = async (host, port) =>
         {
             var proxyClient = string.IsNullOrEmpty(socks.User)
                 ? new Socks5ProxyClient(socks.Host, socks.Port)
                 : new Socks5ProxyClient(socks.Host, socks.Port, socks.User, socks.Password ?? string.Empty);
 
-            return Task.FromResult(proxyClient.CreateConnection(host, port));
+            return await Task.Run(() => proxyClient.CreateConnection(host, port));
         };
     }
 }
